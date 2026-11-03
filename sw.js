@@ -1,6 +1,6 @@
 // SaltySails service worker: app shell is precached so the app opens with no
 // signal; chart tiles you have viewed are cached so they keep working offline.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = `saltysails-shell-${VERSION}`;
 const TILES = 'saltysails-tiles';
 const MAX_TILES = 6000;
@@ -24,7 +24,13 @@ const SHELL_FILES = [
   'vendor/leaflet/images/marker-shadow.png',
 ];
 
-const TILE_HOSTS = ['tile.openstreetmap.org', 'tiles.openseamap.org', 'server.arcgisonline.com'];
+const TILE_HOSTS = [
+  'tile.openstreetmap.org',
+  'tiles.openseamap.org',
+  'server.arcgisonline.com',
+  'gis.natt.is', // LHG nautical charts
+  'gis.lmi.is', // LHG depth contours, maritime limits
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(SHELL).then((c) => c.addAll(SHELL_FILES)).then(() => self.skipWaiting()));

@@ -398,3 +398,36 @@ body.sheet-collapsed .panel { display: none; }
   border-radius: 999px;
   max-width: calc(100vw - 32px);
 }
+
+/* Layer switcher: undo the app-wide form styling and keep it compact + scrollable. */
+.leaflet-control-layers-expanded {
+  /* stop above the Follow + MOB buttons so they never cover a layer */
+  max-height: calc(100vh - var(--top-h, 64px) - var(--sheet-h) - 190px);
+  overflow-y: auto;
+  padding: 6px 10px;
+}
+.leaflet-control-layers label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 2px;
+  font-size: 14px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.leaflet-control-layers label > span,
+.leaflet-control-layers label > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.leaflet-control-layers input.leaflet-control-layers-selector {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  top: 0;
+  accent-color: #1f8ad1;
+}

@@ -108,7 +108,69 @@ const satellite = L.tileLayer(
   { maxZoom: 18, attribution: 'Imagery &copy; Esri' },
 );
 
-L.control.layers({ 'Chart (OSM)': osm, Satellite: satellite }, { 'Seamarks (OpenSeaMap)': seamarks }, { position: 'topright' }).addTo(map);
+// Official Icelandic nautical charts (Landhelgisgæslan / Sjómælingar Íslands), as
+// served to the LHG map viewer at atlas.lmi.is. Web-mercator tile cache, so it
+// lines up with the other layers. The chart is transparent outside chart
+// coverage, so it is drawn over an OSM background.
+const LHG_ATTR = 'Sjókort &copy; <a href="https://www.lhg.is">Landhelgisgæslan</a> / <a href="https://www.natt.is">Náttúrufræðistofnun</a>';
+const sjokort = L.layerGroup([
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }),
+  L.tileLayer.wms('https://gis.natt.is/mapcache/sjokort/web-mercator/wmst', {
+    layers: 'Sjomaelingar:Sjokort_Sjomaelinga',
+    format: 'image/png',
+    transparent: true,
+    version: '1.3.0',
+    tiled: true,
+    maxZoom: 19,
+    attribution: LHG_ATTR,
+  }),
+]);
+
+// Vector overlays published by the Coast Guard as open data (gis.lmi.is, LHG workspace).
+const lhgWms = (layer, extra = {}) =>
+  L.tileLayer.wms('https://gis.lmi.is/geoserver/LHG/wms', {
+    layers: `LHG:${layer}`,
+    format: 'image/png',
+    transparent: true,
+    version: '1.3.0',
+    maxZoom: 19,
+    attribution: 'LHG / Náttúrufræðistofnun (open data)',
+    ...extra,
+  });
+
+const baseLayers = { 'Chart (OSM)': osm, 'Sjókort (LHG)': sjokort, Satellite: satellite };
+const overlays = {
+  'Seamarks (OpenSeaMap)': seamarks,
+  'Depth areas (LHG)': lhgWms('dyptarflakar', { opacity: 0.6 }),
+  'Depth contours (LHG)': lhgWms('dypislinur'),
+  'Territorial sea 12 NM': lhgWms('landhelgi_12_milur_lina'),
+  'Contiguous zone 24 NM': lhgWms('adlaekt_belti_24_milur_lina'),
+  'EEZ 200 NM': lhgWms('efnahagslogsaga_lina'),
+  Baseline: lhgWms('grunnlina'),
+};
+
+// Restore the last chosen base map and overlays.
+const savedBase = store.get('baseLayer', null);
+if (savedBase && baseLayers[savedBase] && savedBase !== 'Chart (OSM)') {
+  map.removeLayer(osm);
+  baseLayers[savedBase].addTo(map);
+}
+const savedOverlays = store.get('overlays', null);
+if (Array.isArray(savedOverlays)) {
+  for (const [name, layer] of Object.entries(overlays)) {
+    if (savedOverlays.includes(name)) layer.addTo(map);
+    else map.removeLayer(layer);
+  }
+}
+map.on('baselayerchange', (e) => store.set('baseLayer', e.name));
+map.on('overlayadd overlayremove', () =>
+  store.set('overlays', Object.keys(overlays).filter((n) => map.hasLayer(overlays[n]))),
+);
+
+L.control.layers(baseLayers, overlays, { position: 'topright' }).addTo(map);
 L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
 
 // Nautical-mile scale (Leaflet only does metric / imperial).
