@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0b2236">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>SaltySails SAR</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header id="topbar">
+    <button id="pos" class="readout pos" title="Tap to change coordinate format">
+      <span class="label">POS <span id="pos-fmt">DDM</span></span>
+      <span id="pos-value">Waiting for GPS…</span>
+    </button>
+    <div class="readout"><span class="label">SOG kn</span><span id="sog">—</span></div>
+    <div class="readout"><span class="label">COG °T</span><span id="cog">—</span></div>
+    <div class="readout small"><span class="label">GPS ±m</span><span id="acc">—</span></div>
+    <button id="night" class="icon-btn" title="Night mode (red)" aria-label="Toggle night mode">☾</button>
+  </header>
+
+  <main id="map" aria-label="Chart"></main>
+
+  <div id="map-controls">
+    <button id="follow" class="fab" title="Follow own ship" aria-pressed="true">⌖</button>
+    <button id="mob" class="fab mob" title="Man overboard: mark position now">MOB</button>
+  </div>
+
+  <div id="pick-banner" hidden>Tap the chart to pick a position <button id="pick-cancel">Cancel</button></div>
+
+  <section id="sheet">
+    <nav id="tabs" role="tablist">
+      <button role="tab" data-tab="nav" aria-selected="true">Nav</button>
+      <button role="tab" data-tab="marks">Marks</button>
+      <button role="tab" data-tab="search">Search</button>
+      <button role="tab" data-tab="drift">Drift</button>
+      <button role="tab" data-tab="log">Log</button>
+      <button role="tab" data-tab="sos" class="sos-tab">SOS</button>
+      <button id="sheet-toggle" class="icon-btn" aria-label="Collapse panel">▾</button>
+    </nav>
+
+    <!-- NAV -->
+    <div class="panel" data-panel="nav">
+      <div id="nav-empty" class="muted">No active target. Pick a mark (<b>Marks</b> → Go) or start a search pattern (<b>Search</b> → Start).</div>
+      <div id="nav-active" hidden>
+        <div class="target-name"><span id="nav-name"></span> <span id="nav-leg" class="muted"></span></div>
+        <div class="grid4">
+          <div class="big"><span class="label">BRG °T</span><span id="nav-brg">—</span></div>
+          <div class="big"><span class="label">DST NM</span><span id="nav-dst">—</span></div>
+          <div class="big"><span class="label">ETA</span><span id="nav-eta">—</span></div>
+          <div class="big"><span class="label">XTE NM</span><span id="nav-xte">—</span></div>
+        </div>
+        <div class="row">
+          <button id="nav-prev">◀ Prev WP</button>
+          <button id="nav-next">Next WP ▶</button>
+          <button id="nav-stop" class="danger">Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARKS -->
+    <div class="panel" data-panel="marks" hidden>
+      <div class="row">
+        <button id="mark-here">＋ At my position</button>
+        <button id="mark-pick">＋ Pick on chart</button>
+      </div>
+      <form id="mark-form" class="row">
+        <input id="mark-name" placeholder="Name (e.g. LKP, Debris)" autocomplete="off">
+        <input id="mark-coord" placeholder="64 08.50N 021 56.30W" autocomplete="off" inputmode="text">
+        <button type="submit">Add</button>
+      </form>
+      <ul id="mark-list" class="list"></ul>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="panel" data-panel="search" hidden>
+      <form id="search-form" class="form-grid">
+        <label>Pattern
+          <select id="sp-type">
+            <option value="SS">Expanding square (SS)</option>
+            <option value="VS">Sector search (VS)</option>
+            <option value="PS">Parallel / creeping line (PS)</option>
+          </select>
+        </label>
+        <label>Datum / CSP
+          <select id="sp-datum"></select>
+        </label>
+        <label>First track °T <input id="sp-track" type="number" min="0" max="359" step="1" value="0" required></label>
+        <label>Turns
+          <select id="sp-turn"><option value="right">Right (starboard)</option><option value="left">Left (port)</option></select>
+        </label>
+        <label data-for="SS PS">Track spacing NM <input id="sp-spacing" type="number" min="0.01" step="0.01" value="0.5"></label>
+        <label data-for="SS">Number of legs <input id="sp-legs" type="number" min="1" max="60" step="1" value="12"></label>
+        <label data-for="VS">Radius NM <input id="sp-radius" type="number" min="0.1" step="0.1" value="2"></label>
+        <label data-for="PS">Leg length NM <input id="sp-leglen" type="number" min="0.1" step="0.1" value="5"></label>
+        <label data-for="PS">Number of legs <input id="sp-pslegs" type="number" min="1" max="60" step="1" value="6"></label>
+        <label>Search speed kn <input id="sp-speed" type="number" min="1" step="0.5" value="8"></label>
+      </form>
+      <div id="sp-summary" class="muted"></div>
+      <div class="row">
+        <button id="sp-preview">Preview</button>
+        <button id="sp-start" class="primary">Start pattern</button>
+        <button id="sp-gpx">Export GPX</button>
+        <button id="sp-clear">Clear</button>
+      </div>
+    </div>
+
+    <!-- DRIFT -->
+    <div class="panel" data-panel="drift" hidden>
+      <p class="muted small">Simple datum estimate: last known position moved by total water current and leeway. For leeway rates by object type, use the IAMSAR Manual Vol. II leeway tables, or follow the JRCC's datum.</p>
+      <form id="drift-form" class="form-grid">
+        <label>Last known position
+          <select id="dr-lkp"></select>
+        </label>
+        <label>Time at LKP <input id="dr-time" type="datetime-local" required></label>
+        <label>Wind FROM °T <input id="dr-wind" type="number" min="0" max="359" value="0" required></label>
+        <label>Leeway kn <input id="dr-leeway" type="number" min="0" step="0.01" value="0.3" required></label>
+        <label>Current set (TO) °T <input id="dr-set" type="number" min="0" max="359" value="0" required></label>
+        <label>Current drift kn <input id="dr-drift" type="number" min="0" step="0.01" value="0.5" required></label>
+      </form>
+      <div id="dr-result" class="result muted">—</div>
+      <div class="row">
+        <button id="dr-calc" class="primary">Calculate datum</button>
+        <button id="dr-save" disabled>Save as mark</button>
+        <button id="dr-search" disabled>Use for search</button>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="panel" data-panel="log" hidden>
+      <div class="row">
+        <button id="trk-toggle" class="primary">● Record track</button>
+        <span id="trk-stats" class="muted">0 pts · 0.00 NM</span>
+        <button id="trk-gpx">Track GPX</button>
+        <button id="trk-clear" class="danger">Clear track</button>
+      </div>
+      <form id="log-form" class="row">
+        <input id="log-text" placeholder="Log entry (stamped with time + position)" autocomplete="off">
+        <button type="submit">Log</button>
+      </form>
+      <ul id="log-list" class="list log"></ul>
+      <div class="row">
+        <button id="log-export">Export log (.txt)</button>
+        <button id="log-clear" class="danger">Clear log</button>
+      </div>
+    </div>
+
+    <!-- SOS -->
+    <div class="panel" data-panel="sos" hidden>
+      <div class="sos-box">
+        <div class="sos-line"><b>Emergency:</b> <a href="tel:112" class="call">Call 112</a></div>
+        <div class="sos-line"><b>VHF:</b> Channel 16 (voice) · DSC distress on Ch 70</div>
+        <div class="sos-line muted small">The Icelandic Coast Guard (Landhelgisgæslan) runs the JRCC and the Maritime Traffic Service (Vaktstöð siglinga). Follow their instructions; this app does not replace them.</div>
+      </div>
+      <div class="label">My position</div>
+      <div id="sos-pos" class="sos-pos">—</div>
+      <div class="label">MAYDAY script (say slowly)</div>
+      <label class="inline">Vessel name <input id="sos-vessel" placeholder="Vessel name"></label>
+      <label class="inline">Call sign / MMSI <input id="sos-call" placeholder="TF... / 251..."></label>
+      <label class="inline">Persons on board <input id="sos-pob" type="number" min="0" placeholder="POB"></label>
+      <pre id="sos-script" class="script"></pre>
+      <button id="sos-copy">Copy position + script</button>
+    </div>
+  </section>
+
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
