@@ -162,6 +162,7 @@ export function initAis({ map, store: kv, getPos, toast, addMark, goTo, addLog, 
   // Internet: aisstream.io through our relay (/api/ais), area around the chart view or own position.
   let es = null;
   let esBox = null;
+  const internetShips = new Set(); // MMSIs heard via the internet source (for status)
   function wantedBox() {
     const p = getPos();
     const b = map.getBounds();
@@ -191,12 +192,24 @@ export function initAis({ map, store: kv, getPos, toast, addMark, goTo, addLog, 
     es.addEventListener('status', (ev) => {
       try {
         const s = JSON.parse(ev.data);
-        setStatus('internet', s.error ? `error: ${s.error}` : 'connected (aisstream.io)');
+        setStatus(
+          'internet',
+          s.error
+            ? `error: ${s.error}`
+            : internetShips.size
+              ? `connected (aisstream.io) · ${internetShips.size} ships received`
+              : 'connected (aisstream.io) · no ships received yet; coverage around Iceland is very limited',
+        );
       } catch {}
     });
     es.onmessage = (ev) => {
       try {
-        ingest(fromAisstream(JSON.parse(ev.data)), 'internet');
+        const m = fromAisstream(JSON.parse(ev.data));
+        if (m) {
+          internetShips.add(m.mmsi);
+          setStatus('internet', `connected (aisstream.io) · ${internetShips.size} ship${internetShips.size === 1 ? '' : 's'} received`);
+        }
+        ingest(m, 'internet');
       } catch {}
     };
     es.onerror = async () => {
