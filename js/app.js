@@ -14,6 +14,7 @@ import {
   toGpx,
 } from './geo.js';
 import { initTides } from './tide-ui.js';
+import { initWeather } from './weather-ui.js';
 
 // ---------------------------------------------------------------------------
 // Persistence (localStorage can be unavailable; never let that break the app)
@@ -242,9 +243,33 @@ const tides = initTides({
   toast: (...a) => toast(...a),
   getPos: () => state.fix,
   onSelectTab: (t) => selectTab(t),
+  // Storm surge from Vegagerðin's sea-level model at the nearest of its harbours.
+  extraFor: async (station, st) => {
+    const { harbours } = await weather.observations();
+    const near = harbours
+      .map((h) => ({ h, nm: distanceNm(station, h) }))
+      .filter((x) => Number.isFinite(x.h.surge))
+      .sort((a, b) => a.nm - b.nm)[0];
+    if (!near || near.nm > 15) return '';
+    const sg = near.h.surge;
+    const adj = st && Number.isFinite(st.height) ? ` → about <b>${(st.height + sg).toFixed(1)} m</b> now` : '';
+    return `Surge ${sg >= 0 ? '+' : '−'}${Math.abs(sg).toFixed(2)} m from pressure and wind${adj} (Vegagerðin model, ${near.h.name}, ${near.h.date.slice(11, 16)} GMT).`;
+  },
 });
 overlays['Tide stations'] = tides.layer;
 if (Array.isArray(savedOverlays) && savedOverlays.includes('Tide stations')) tides.layer.addTo(map);
+
+// Weather: Windy-style layer (Wx button), forecast tab, Vegagerðin measurements.
+const weather = initWeather({
+  map,
+  store,
+  toast: (...a) => toast(...a),
+  getPos: () => state.fix,
+  marks: () => state.marks,
+  selectTab: (t) => selectTab(t),
+});
+overlays['Measured waves & wind (Vegagerðin)'] = weather.obsLayer;
+if (Array.isArray(savedOverlays) && savedOverlays.includes('Measured waves & wind (Vegagerðin)')) weather.obsLayer.addTo(map);
 
 L.control.layers(baseLayers, overlays, { position: 'topright' }).addTo(map);
 L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
@@ -366,6 +391,7 @@ function selectTab(name) {
   if (name === 'search' || name === 'drift') refreshMarkSelects();
   if (name === 'sos') renderSos();
   if (name === 'tide') tides.render();
+  if (name === 'weather') weather.renderForecast();
   setTimeout(() => map.invalidateSize(), 50);
 }
 document.querySelectorAll('#tabs [role="tab"]').forEach((b) => b.addEventListener('click', () => selectTab(b.dataset.tab)));
@@ -779,6 +805,34 @@ function localDateTimeValue(d) {
   return new Date(d.getTime() - off).toISOString().slice(0, 16);
 }
 $('dr-time').value = localDateTimeValue(new Date());
+
+// Fill wind and current with the forecast's vector mean between the LKP time and now.
+$('dr-fill').addEventListener('click', async () => {
+  const lkp = resolvePoint($('dr-lkp').value);
+  if (!lkp) return toast('Choose a last known position');
+  const t0 = new Date($('dr-time').value).getTime() / 1000;
+  const t1 = Date.now() / 1000;
+  if (!Number.isFinite(t0)) return toast('Enter the time at LKP');
+  $('dr-fill').disabled = true;
+  try {
+    const { wind, current } = await weather.driftInputs(lkp, Math.min(t0, t1), t1);
+    if (wind) $('dr-wind').value = Math.round(wind.dir) % 360;
+    if (current) {
+      $('dr-set').value = Math.round(current.dir) % 360;
+      $('dr-drift').value = current.speed.toFixed(2);
+    }
+    toast(
+      wind || current
+        ? `Forecast mean at LKP: wind from ${wind ? Math.round(wind.dir) : '—'}° ${wind ? wind.speed.toFixed(0) : '—'} kn, current to ${current ? Math.round(current.dir) : '—'}° ${current ? current.speed.toFixed(2) : '—'} kn. Set leeway for the object yourself.`
+        : 'No forecast for that time',
+      6000,
+    );
+  } catch {
+    toast('Forecast unavailable (offline?)');
+  } finally {
+    $('dr-fill').disabled = false;
+  }
+});
 
 $('dr-calc').addEventListener('click', () => {
   const lkp = resolvePoint($('dr-lkp').value);

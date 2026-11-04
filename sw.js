@@ -1,8 +1,9 @@
 // SaltySails service worker: app shell is precached so the app opens with no
 // signal; chart tiles you have viewed are cached so they keep working offline.
-const VERSION = 'v4';
+const VERSION = 'v5';
 const SHELL = `saltysails-shell-${VERSION}`;
 const TILES = 'saltysails-tiles';
+const WX = 'saltysails-weather';
 const MAX_TILES = 6000;
 
 const SHELL_FILES = [
@@ -13,6 +14,8 @@ const SHELL_FILES = [
   'js/geo.js',
   'js/tides.js',
   'js/tide-ui.js',
+  'js/weather.js',
+  'js/weather-ui.js',
   'data/tides-2026.json',
   'data/depth-labels.json',
   'manifest.webmanifest',
@@ -49,6 +52,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+async function trimCache(name, max) {
+  const cache = await caches.open(name);
+  const keys = await cache.keys();
+  for (let i = 0; i < keys.length - max; i++) await cache.delete(keys[i]);
+}
+
 async function trimTiles() {
   const cache = await caches.open(TILES);
   const keys = await cache.keys();
@@ -79,6 +88,24 @@ self.addEventListener('fetch', (event) => {
           .catch(() => cached || Response.error());
         return cached || network;
       }),
+    );
+    return;
+  }
+
+  // Forecasts: network-first; when offline, the last forecast fetched for the same
+  // grid points / place is used (the app shows its time, so staleness is visible).
+  if (url.hostname === 'api.open-meteo.com' || url.hostname === 'marine-api.open-meteo.com') {
+    event.respondWith(
+      caches.open(WX).then((cache) =>
+        fetch(req)
+          .then((res) => {
+            if (res.ok) {
+              cache.put(req, res.clone()).then(() => trimCache(WX, 300));
+            }
+            return res;
+          })
+          .catch(() => cache.match(req).then((r) => r || Response.error())),
+      ),
     );
     return;
   }

@@ -31,7 +31,7 @@ function mergeStations(files) {
   return [...byId.values()];
 }
 
-export function initTides({ map, store, toast, getPos, onSelectTab }) {
+export function initTides({ map, store, toast, getPos, onSelectTab, extraFor }) {
   const $ = (id) => document.getElementById(id);
   let stations = [];
   let source = '';
@@ -161,6 +161,16 @@ export function initTides({ map, store, toast, getPos, onSelectTab }) {
 
     renderChart(t, heights);
     renderTable(t, heights);
+    const extraEl = $('tide-extra');
+    extraEl.innerHTML = '';
+    if (extraFor) {
+      const forStation = station;
+      extraFor(station, st)
+        .then((html) => {
+          if (station === forStation) extraEl.innerHTML = html || '';
+        })
+        .catch(() => {});
+    }
     const daysLeft = (cov.to - t) / 1440;
     if (daysLeft < 30) {
       $('tide-table').insertAdjacentHTML(

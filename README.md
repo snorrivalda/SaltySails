@@ -17,9 +17,11 @@ screen as an app (PWA). There is no build step and no server code.
 | **MOB** | One tap marks the man-overboard position, logs it with the time, vibrates, and starts navigation back to it |
 | **Nav** | Bearing, distance, ETA and cross-track error (XTE) to the active mark or search-pattern waypoint. Advances to the next waypoint automatically within ~90 m |
 | **Tide** | Official Coast Guard tide tables for the 5 reference ports and 45 secondary harbours. Shows the nearest station (or any you pick) with the height now, rising or falling and how fast, spring or neap, and the next HW/LW with countdowns. The curve covers 24 h, 3 days or 7 days; touch it to read any time. Below is a 7-day HW/LW table. Times are GMT. The *Tide stations* map overlay shows live heights; tap a pin to open it |
+| **Weather** | Forecast for your position, the chart centre or any mark: wind, gusts and Beaufort, waves, period and swell, current, pressure, air and sea temperature, rain and visibility. 3-hourly for 7 days in a Windguru-style colour table, plus the nearest measured buoy, coastal wind station and harbour sea level from Vegagerðin |
+| **Wx (map)** | Windy-style layer: a colour field for wind, gusts, waves, swell or current, with animated particles for wind and current and direction arrows for waves. Includes a 7-day time slider with play and a legend. Tap the chart to read the value there |
 | **Marks** | Add marks at own position, by tapping the chart, or by typing coordinates (`64 08.50N 021 56.30W`, `64°08.5'N 21°56.3'W`, `64.1416, -21.9383`, `64,1416; -21,9383`; `V` for *vestur* is accepted). The newest mark becomes the default search datum / LKP |
 | **Search** | IAMSAR patterns: **Expanding square (SS)**, **Sector search (VS)**, **Parallel track / creeping line (PS)**. Set first track, spacing, legs, radius, turn direction, and search speed. Shows total distance and time, previews the pattern on the chart, follows it leg by leg, and exports it as a GPX route for the chartplotter |
-| **Drift** | Simple datum estimate from LKP + time + leeway (downwind) + total water current. Save the result as a mark, or start a search from it in one tap |
+| **Drift** | Simple datum estimate from LKP + time + leeway (downwind) + total water current. *Fill wind & current from forecast* uses the forecast's vector mean at the LKP between its time and now. Save the result as a mark, or start a search from it in one tap |
 | **Log** | Track recording (GPX export, including marks) and an incident log. Each entry is stamped with the time and position; export it as `.txt` |
 | **SOS** | 112 call button, VHF Ch 16 / DSC Ch 70, own position in large type, and a MAYDAY script filled in with vessel name, call sign/MMSI, POB and the current position |
 
@@ -68,12 +70,25 @@ Then add `data/tides-2027.json` to `TIDE_FILES` in `js/tide-ui.js` and to `SHELL
 The script refuses to write data that fails its checks: every day present, high and low water
 alternating, and plausible gaps. The app warns 30 days before the loaded tables run out.
 
+## Weather sources
+
+| Data | Source | Notes |
+| --- | --- | --- |
+| Wind, gusts, pressure, temperature, rain, visibility | [Open-Meteo](https://open-meteo.com/) forecast API (best-match models: ECMWF, DWD, DMI and others) | Free without a key for non-commercial use, with attribution. A paid key is needed for commercial or organisational use |
+| Waves, swell, currents, sea temperature | Open-Meteo Marine (DWD ICON-Wave, Copernicus) | Model data, not for coastal navigation on its own |
+| Measured buoys, coastal wind, harbour sea level and surge | Vegagerðin via [sjolag.is](https://sjolag.is) | Vegagerðin states the measurements are open data (gagnaveita.vegagerdin.is). The sjolag.is API sends no CORS headers, so `vercel.json` proxies it at `/api/sjolag/*`, and `npm start` does the same locally |
+
+Forecasts you have viewed are cached and used when offline. The Tide tab adds Vegagerðin's modelled storm surge
+for the nearest harbour (within 15 NM) to the table height.
+
+Always check the Icelandic Met Office's marine forecasts and warnings (vedur.is). The app does not replace them.
+
 ## Running
 
 Any static file server works. Geolocation and service workers need **HTTPS** (or `localhost`).
 
 ```bash
-npm start          # serves on http://localhost:8080
+npm start          # serves on http://localhost:8080 (with the /api/sjolag proxy)
 ```
 
 To deploy, put the folder on any static host: GitHub Pages, Vercel, Netlify, or a
@@ -108,6 +123,8 @@ test/geo.test.js      unit tests
 
 ## Ideas / roadmap
 
+- Use Vegagerðin's own open data service (gagnaveita.vegagerdin.is) directly instead of the sjolag.is website API
+- Weather warnings from the Icelandic Met Office (vedur.is)
 - AIS overlay (via a NMEA/Signal K gateway on board) to see other SAR units
 - Shared incident: sync marks, datum and assigned search areas between units
 - IAMSAR leeway tables by object type, and datum lines/areas with probability of

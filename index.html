@@ -32,12 +32,29 @@
     <button id="mob" class="fab mob" title="Man overboard: mark position now">MOB</button>
   </div>
 
+  <div id="wx-bar" hidden>
+    <div class="row wx-top">
+      <div id="wx-modes" class="wx-modes" role="group" aria-label="Weather layer"></div>
+    </div>
+    <div class="row wx-mid">
+      <button id="wx-play" class="icon-btn" aria-label="Play forecast">▶</button>
+      <input id="wx-time" type="range" min="0" max="0" value="0" aria-label="Forecast time">
+      <button id="wx-close" class="icon-btn" aria-label="Hide weather">✕</button>
+    </div>
+    <div class="row wx-bot">
+      <span id="wx-time-label"></span>
+      <span id="wx-status" class="muted"></span>
+      <div id="wx-legend" class="wx-legend"></div>
+    </div>
+  </div>
+
   <div id="pick-banner" hidden>Tap the chart to pick a position <button id="pick-cancel">Cancel</button></div>
 
   <section id="sheet">
     <nav id="tabs" role="tablist">
       <button role="tab" data-tab="nav" aria-selected="true">Nav</button>
       <button role="tab" data-tab="tide">Tide</button>
+      <button role="tab" data-tab="weather">Weather</button>
       <button role="tab" data-tab="marks">Marks</button>
       <button role="tab" data-tab="search">Search</button>
       <button role="tab" data-tab="drift">Drift</button>
@@ -76,6 +93,7 @@
       </div>
       <div id="tide-body">
         <div id="tide-now" class="grid3"></div>
+        <div id="tide-extra" class="muted small"></div>
         <div class="row" id="tide-range" role="group" aria-label="Chart range">
           <button data-days="1" aria-pressed="true">24 h</button>
           <button data-days="3">3 days</button>
@@ -85,6 +103,21 @@
         <div id="tide-chart" class="tide-chart"></div>
         <div id="tide-table"></div>
       </div>
+    </div>
+
+    <!-- WEATHER -->
+    <div class="panel" data-panel="weather" hidden>
+      <div class="row tide-head">
+        <div class="grow">
+          <div class="target-name">Weather &amp; sea</div>
+          <div class="muted small" id="wx-where"></div>
+        </div>
+        <select id="wx-loc" aria-label="Forecast location"></select>
+        <button id="wx-refresh" class="icon-btn" aria-label="Refresh forecast" title="Refresh">⟳</button>
+      </div>
+      <div id="wx-now" class="grid3"></div>
+      <div id="wx-table"></div>
+      <div id="wx-obs"></div>
     </div>
 
     <!-- MARKS -->
@@ -149,6 +182,7 @@
       </form>
       <div id="dr-result" class="result muted">—</div>
       <div class="row">
+        <button id="dr-fill">Fill wind &amp; current from forecast</button>
         <button id="dr-calc" class="primary">Calculate datum</button>
         <button id="dr-save" disabled>Save as mark</button>
         <button id="dr-search" disabled>Use for search</button>
