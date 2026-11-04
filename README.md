@@ -84,7 +84,8 @@ alternating, and plausible gaps. The app warns 30 days before the loaded tables 
 Vegagerðin's wave forecast (*ölduspá*) is read straight from the PMTiles vector tiles that sjolag.is publishes:
 `tiles/forecast/<AREA>_<run>.pmtiles`, with the current run's files listed in `tiles/style.json`. The layers are
 `olduhaed` (bands), `olduhaed_lines` (contours) and `stefna_*` (Dir/Tp points). These files send no CORS headers,
-so `vercel.json` proxies `/api/sjolag-tiles/*` and `/api/sjolag-static/*` (the land masks) with Range requests,
+so the small function `api/sjolag-pm.js` proxies them (and the land-mask tiles). It forwards Range requests and
+turns off CDN caching, so byte ranges can't get mixed up, and it only fetches sjolag.is's PMTiles and style file.
 and the PMTiles reader is bundled in `vendor/pmtiles-vt.js` (licences in `vendor/pmtiles-vt.LICENSES.txt`).
 `Dir` is the direction the waves travel. Checked 4 Nov 2026: 12 points were 177° on average from Open-Meteo's
 "from" direction. These tiles are fetched with Range requests, so they aren't stored for offline use.

@@ -35,8 +35,8 @@ test('sources from sjolag.is style, proxied, offshore first', () => {
   assert.deepEqual(
     s.map((x) => [x.area, x.url, x.minZoom]),
     [
-      ['OFFSHORE', 'api/sjolag-tiles/forecast/uthaf_2026-11-04_00_00_00_0.pmtiles', 0],
-      ['GRINDAVIK', 'api/sjolag-tiles/forecast/GRINDAVIK_2026-11-04_00_00_00_0.pmtiles', 7],
+      ['OFFSHORE', 'api/sjolag-pm?p=tiles/forecast/uthaf_2026-11-04_00_00_00_0.pmtiles', 0],
+      ['GRINDAVIK', 'api/sjolag-pm?p=tiles/forecast/GRINDAVIK_2026-11-04_00_00_00_0.pmtiles', 7],
     ],
   );
   assert.equal(arrowLayer(s[0], 5), 'stefna_0');

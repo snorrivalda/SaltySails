@@ -3,14 +3,6 @@
     {
       "source": "/api/sjolag/:path*",
       "destination": "https://sjolag.is/api/:path*"
-    },
-    {
-      "source": "/api/sjolag-tiles/:path*",
-      "destination": "https://sjolag.is/tiles/:path*"
-    },
-    {
-      "source": "/api/sjolag-static/:path*",
-      "destination": "https://sjolag.is/static/:path*"
     }
   ],
   "headers": [

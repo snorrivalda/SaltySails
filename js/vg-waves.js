@@ -9,13 +9,14 @@
 //   olduhaed_lines  contour lines, wave_height / wave_heigh (m)
 //   stefna_0/1/2    points: Dir (direction of travel, °), Tp (peak period, s), at 3 densities
 // The tiles have no CORS headers, so they're fetched through our same-origin
-// proxy (/api/sjolag-tiles/* -> https://sjolag.is/tiles/*, see vercel.json).
+// proxy function (api/sjolag-pm.js), which forwards Range requests.
 
-export const TILE_PROXY = 'api/sjolag-tiles';
+// Same-origin proxy function for sjolag.is (api/sjolag-pm.js): forwards Range, no CDN caching.
+export const PM_PROXY = 'api/sjolag-pm?p=';
 // Land masks, as sjolag.is uses them: Landmælingar's coastline (lmi_strandlina) and other countries.
 export const MASKS = [
-  { url: 'api/sjolag-static/tiles/base/map-v1.pmtiles', layer: 'lmi_strandlina', maxZoom: 22 },
-  { url: 'api/sjolag-static/tiles/base/countries-v1.pmtiles', layer: 'countriesfiltered', maxZoom: 6 },
+  { url: `${PM_PROXY}static/tiles/base/map-v1.pmtiles`, layer: 'lmi_strandlina', maxZoom: 22 },
+  { url: `${PM_PROXY}static/tiles/base/countries-v1.pmtiles`, layer: 'countriesfiltered', maxZoom: 6 },
 ];
 
 // sjolag.is's own colour steps for significant wave height (m).
@@ -80,7 +81,7 @@ export function parseSources(style) {
       id,
       area: id === 'waves' ? 'OFFSHORE' : id.slice('waves_'.length).toUpperCase(),
       offshore: id === 'waves',
-      url: `${TILE_PROXY}/${m[1]}`,
+      url: `${PM_PROXY}tiles/${m[1]}`,
       // sjolag.is shows the coastal models from zoom 7 up
       minZoom: id === 'waves' ? 0 : 7,
     });
@@ -109,7 +110,7 @@ export function createVgWavesLayer(L, lib, { onStatus = () => {} } = {}) {
 
   async function init() {
     const [style, ts] = await Promise.all([
-      fetch(`${TILE_PROXY}/style.json?layer=default`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`style ${r.status}`)))),
+      fetch(`${PM_PROXY}tiles/style.json&layer=default`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`style ${r.status}`)))),
       fetch('api/sjolag/forecasts/timestamps').then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]);
     sources = parseSources(style).map((s) => ({ ...s, pm: new PMTiles(s.url) }));

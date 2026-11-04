@@ -8,6 +8,7 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import aisRelay from '../api/ais.js';
 import lhgRelay from '../api/ais-lhg.js';
+import sjolagPm from '../api/sjolag-pm.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const port = Number(process.argv[2] || 8080);
@@ -27,6 +28,7 @@ createServer(async (req, res) => {
   try {
     if (url.pathname === '/api/ais') return aisRelay(req, res);
     if (url.pathname === '/api/ais-lhg') return lhgRelay(req, res);
+    if (url.pathname === '/api/sjolag-pm') return sjolagPm(req, res);
     const pm = /^\/api\/sjolag-(tiles|static)\/(.*)$/.exec(url.pathname);
     if (pm) {
       // forward Range for PMTiles
