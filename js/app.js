@@ -16,6 +16,7 @@ import {
 import { initTides } from './tide-ui.js';
 import { initWeather } from './weather-ui.js';
 import { initWarnings } from './warnings-ui.js';
+import { initAis } from './ais-ui.js';
 
 // ---------------------------------------------------------------------------
 // Persistence (localStorage can be unavailable; never let that break the app)
@@ -280,6 +281,37 @@ if (!Array.isArray(savedOverlays) || savedOverlays.includes('Weather warnings (V
 }
 store.set('warnLayerSeen', true);
 
+// AIS targets (onboard receiver and/or internet relay).
+const ais = initAis({
+  map,
+  store,
+  getPos: () => state.fix,
+  toast: (...a) => toast(...a),
+  addMark: (p, name, kind) => addMark(p, name, kind),
+  goTo: (m) => goTo(m),
+  addLog: (text, pos) => addLog(text, pos),
+  selectTab: (t) => selectTab(t),
+  // Boat GPS via Signal K: feed it in as our position (phone GPS is then ignored).
+  onOwnFix: (m) => {
+    state.extFixAt = Date.now();
+    onPosition(
+      {
+        timestamp: Date.now(),
+        coords: {
+          latitude: m.lat,
+          longitude: m.lon,
+          accuracy: 5,
+          speed: Number.isFinite(m.sog) ? m.sog / 1.943844 : null,
+          heading: Number.isFinite(m.cog) ? m.cog : null,
+        },
+      },
+      true,
+    );
+  },
+});
+overlays['AIS targets'] = ais.layer;
+if ((Array.isArray(savedOverlays) && savedOverlays.includes('AIS targets')) || ais.cfg.onboard || ais.cfg.internet) ais.layer.addTo(map);
+
 L.control.layers(baseLayers, overlays, { position: 'topright' }).addTo(map);
 L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
 
@@ -401,6 +433,7 @@ function selectTab(name) {
   if (name === 'sos') renderSos();
   if (name === 'tide') tides.render();
   if (name === 'weather') weather.renderForecast();
+  if (name === 'ais') ais.render();
   setTimeout(() => map.invalidateSize(), 50);
 }
 document.querySelectorAll('#tabs [role="tab"]').forEach((b) => b.addEventListener('click', () => selectTab(b.dataset.tab)));
@@ -413,7 +446,9 @@ $('sheet-toggle').addEventListener('click', () => {
 // ---------------------------------------------------------------------------
 // GPS
 // ---------------------------------------------------------------------------
-function onPosition(pos) {
+function onPosition(pos, external = false) {
+  // While the boat's GPS (Signal K) is feeding us, ignore the phone's own fixes.
+  if (!external && state.extFixAt && Date.now() - state.extFixAt < 10000) return;
   const c = pos.coords;
   const fix = { lat: c.latitude, lon: c.longitude, acc: c.accuracy, time: pos.timestamp, sog: NaN, cog: NaN };
 

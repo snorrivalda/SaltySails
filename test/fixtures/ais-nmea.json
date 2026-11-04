@@ -1,0 +1,185 @@
+[
+ {
+  "name": "type1 fishing vessel off Reykjanes",
+  "sentences": [
+   "!AIVDM,1,1,,A,13gOE>701CvH1w`TV2Ea2W;5P000,0*05"
+  ],
+  "expected": {
+   "msg_type": 1,
+   "mmsi": 251123000,
+   "status": 7,
+   "speed": 8.3,
+   "lon": -22.71234,
+   "lat": 63.95321,
+   "course": 231.4,
+   "heading": 229
+  }
+ },
+ {
+  "name": "type1 SAR vessel moving",
+  "sentences": [
+   "!AIVDM,1,1,,A,13hDk60P3LvKQEPTeW0;f9JEP000,0*6E"
+  ],
+  "expected": {
+   "msg_type": 1,
+   "mmsi": 251999000,
+   "status": 0,
+   "speed": 22.0,
+   "lon": -21.95,
+   "lat": 64.16,
+   "course": 300.0,
+   "heading": 301
+  }
+ },
+ {
+  "name": "type3 anchored, heading unavailable",
+  "sentences": [
+   "!AIVDM,1,1,,A,13gGm;iP00NKTA0Te?T>4?v;P000,0*09"
+  ],
+  "expected": {
+   "msg_type": 1,
+   "mmsi": 251000111,
+   "status": 1,
+   "speed": 0.0,
+   "lon": -21.94,
+   "lat": 64.15,
+   "course": 360.0,
+   "heading": 511
+  }
+ },
+ {
+  "name": "AIS-SART active (MMSI 970)",
+  "sentences": [
+   "!AIVDM,1,1,,A,1>M4nfNP05NF@K0Ulap1hgv3P000,0*43"
+  ],
+  "expected": {
+   "msg_type": 1,
+   "mmsi": 970012345,
+   "status": 14,
+   "speed": 0.5,
+   "lon": -23.1,
+   "lat": 66.1,
+   "course": 45.0,
+   "heading": 511
+  }
+ },
+ {
+  "name": "type18 class B",
+  "sentences": [
+   "!AIVDM,1,1,,A,B3gqdf00>7Vlc09;i<0p@eb40000,0*47"
+  ],
+  "expected": {
+   "msg_type": 18,
+   "mmsi": 251555000,
+   "speed": 5.6,
+   "lon": -22.0,
+   "lat": 64.2,
+   "course": 90.0,
+   "heading": 91
+  }
+ },
+ {
+  "name": "type19 class B extended",
+  "sentences": [
+   "!AIVDM,1,1,,A,C3gqdf@087Vi0`9;o31hQJ?0VFb`H200000000000000BP000000,0*3B"
+  ],
+  "expected": {
+   "msg_type": 19,
+   "mmsi": 251555001,
+   "speed": 3.2,
+   "lon": -22.05,
+   "lat": 64.21,
+   "course": 180.0,
+   "heading": 180,
+   "shipname": "SKUTLA",
+   "ship_type": 37,
+   "to_bow": 0,
+   "to_stern": 0,
+   "to_port": 0,
+   "to_starboard": 0
+  }
+ },
+ {
+  "name": "type9 SAR aircraft",
+  "sentences": [
+   "!AIVDM,1,1,,A,91b6>W1;1pNI0=0Tr3p1hS000000,0*0D"
+  ],
+  "expected": {
+   "msg_type": 9,
+   "mmsi": 111251100,
+   "alt": 300,
+   "speed": 120.0,
+   "lon": -22.5,
+   "lat": 64.5,
+   "course": 45.0
+  }
+ },
+ {
+  "name": "type21 aid to navigation",
+  "sentences": [
+   "!AIVDM,1,1,,A,E>jRG`@SPa29UPSTP0000000000?<4A@BEEh000000000000000000000000,4*21"
+  ],
+  "expected": {
+   "msg_type": 21,
+   "mmsi": 992516001,
+   "aid_type": 1,
+   "name": "GARDSKAGI",
+   "lon": -22.69,
+   "lat": 64.08,
+   "to_bow": 0,
+   "to_stern": 0,
+   "to_port": 0,
+   "to_starboard": 0
+  }
+ },
+ {
+  "name": "type24A name",
+  "sentences": [
+   "!AIVDM,1,1,,A,H3gqdf0P4Hu8pTpp000000000000,0*3C"
+  ],
+  "expected": {
+   "msg_type": 24,
+   "mmsi": 251555000,
+   "partno": 0,
+   "shipname": "HAFORNINN"
+  }
+ },
+ {
+  "name": "type24B static",
+  "sentences": [
+   "!AIVDM,1,1,,A,H3gqdf4T0000000D612i000`4120,0*56"
+  ],
+  "expected": {
+   "msg_type": 24,
+   "mmsi": 251555000,
+   "partno": 1,
+   "ship_type": 36,
+   "callsign": "TFAB1",
+   "to_bow": 5,
+   "to_stern": 4,
+   "to_port": 1,
+   "to_starboard": 2
+  }
+ },
+ {
+  "name": "type5 static (2 parts)",
+  "sentences": [
+   "!AIVDM,2,1,0,A,53hDk602Fe3u@IQT001@Pu80000000000000000k50B666j<0>TQFBjPERBh,0*21",
+   "!AIVDM,2,2,0,A,00000000000,2*24"
+  ],
+  "expected": {
+   "msg_type": 5,
+   "mmsi": 251999000,
+   "imo": 9876543,
+   "callsign": "TFXY",
+   "shipname": "THOR",
+   "ship_type": 51,
+   "to_bow": 40,
+   "to_stern": 18,
+   "to_port": 6,
+   "to_starboard": 6,
+   "draught": 5.8,
+   "destination": "REYKJAVIK"
+  }
+ }
+]

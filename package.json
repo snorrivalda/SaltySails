@@ -5,5 +5,11 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "start": "node tools/dev-server.mjs 8080"
+  },
+  "devDependencies": {
+    "ws": "8.18.0"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

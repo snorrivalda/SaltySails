@@ -712,3 +712,61 @@ body.has-banner #pick-banner { top: calc(var(--top-h, 64px) + var(--banner-h, 36
 .warn-chip.orange, .warn-chip.red { color: #fff; }
 .stale { color: var(--accent); font-weight: 700; }
 :root[data-night='1'] .warn-chip { background: transparent; color: var(--text); border: 1px solid var(--text); }
+
+/* ---------- AIS ---------- */
+.ais-icon { overflow: visible; }
+.ais-svg { display: block; overflow: visible; filter: drop-shadow(0 0 1px #000); }
+.ais-svg.distress { animation: ais-pulse 0.8s infinite alternate; }
+@keyframes ais-pulse { to { transform: scale(1.35); } }
+.ais-label {
+  display: none;
+  position: absolute;
+  left: 24px;
+  top: 6px;
+  white-space: nowrap;
+  font: 600 11px/1.2 system-ui, sans-serif;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 0 4px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.leaflet-zoom-anim .ais-label { display: none !important; }
+#map.ais-names .ais-label, .k-sart .ais-label, .k-mob .ais-label, .k-epirb .ais-label, .k-sar .ais-label, .k-sar-aircraft .ais-label { display: block; }
+.ais-pop { font-size: 13px; line-height: 1.45; }
+.ais-pop button { min-height: 34px; padding: 4px 10px; background: #1f8ad1; color: #fff; border: none; }
+.ais-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; border: 1px solid #000; }
+#ais-list li.stale { opacity: 0.5; }
+#ais-list li.distress { outline: 2px solid #ff1744; }
+.cpa-danger { color: #ff5252; font-weight: 800; }
+.tab-count { font-size: 11px; color: var(--muted); }
+.ais-settings { background: var(--panel-2); border-radius: 8px; padding: 8px 10px; display: block; }
+.ais-settings summary { cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.ais-settings > * + * { margin-top: 8px; }
+.ais-st.ok { color: var(--ok); font-weight: 700; }
+.ais-st.warn { color: var(--accent); font-weight: 700; }
+label.check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+label.check input { width: 22px; min-height: 22px; height: 22px; flex: none; accent-color: var(--primary); }
+.ais-alarm {
+  position: fixed;
+  top: calc(var(--top-h, 64px) + var(--banner-h, 0px));
+  left: 0;
+  right: 0;
+  z-index: 1003;
+  background: #ff1744;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 14px;
+  animation: ais-flash 1s infinite alternate;
+}
+.ais-alarm[hidden] { display: none; }
+.ais-alarm-actions { display: inline-flex; gap: 6px; margin-left: 6px; }
+.ais-alarm button { min-height: 32px; padding: 2px 10px; background: #fff; color: #000; border: none; }
+@keyframes ais-flash { to { background: #b2102f; } }
+:root[data-night='1'] .ais-alarm { background: #400; color: var(--text); border-bottom: 2px solid var(--text); animation: none; }
+:root[data-night='1'] .ais-icon .ais-svg,
+:root[data-night='1'] .ais-dot,
+:root[data-night='1'] path.ais-vec { filter: grayscale(1) sepia(1) hue-rotate(-50deg) saturate(6) brightness(0.8); }
+:root[data-night='1'] .ais-label { background: #000; color: var(--text); }
+:root[data-night='1'] .ais-alarm button,
+:root[data-night='1'] .ais-pop button { background: #000; color: var(--text); border: 1px solid var(--text); }
