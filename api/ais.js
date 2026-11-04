@@ -45,7 +45,12 @@ export default async function handler(req, res) {
   }
   const url = new URL(req.url, 'http://x');
   const b = parseBbox(url.searchParams.get('bbox'));
-  if (url.searchParams.has('probe')) return probe(key, b, res);
+  // ?probe=1&control=1 checks the same pipeline on a busy area elsewhere (Dover Strait),
+  // to tell "no coverage around Iceland" apart from "the relay is broken". Probe only.
+  if (url.searchParams.has('probe')) {
+    const control = { south: 50.6, west: 0.8, north: 51.4, east: 2.0 };
+    return probe(key, url.searchParams.has('control') ? control : b, res);
+  }
 
   res.writeHead(200, {
     'content-type': 'text/event-stream; charset=utf-8',
