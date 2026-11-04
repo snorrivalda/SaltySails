@@ -446,3 +446,98 @@ body.sheet-collapsed .panel { display: none; }
   color: var(--text);
   text-shadow: 0 0 2px #000, 0 0 2px #000;
 }
+
+/* ---------- Tides ---------- */
+.tide-head select { width: auto; max-width: 55%; }
+.grid3 {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 8px;
+}
+@media (max-width: 420px) {
+  .grid3 { grid-template-columns: 1fr 1fr; }
+  .grid3 .tide-height { grid-column: 1 / -1; }
+}
+.big .sub {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.tide-height .arrow { color: var(--accent); }
+.tide-warn {
+  grid-column: 1 / -1;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px;
+}
+#tide-range button { min-height: 36px; padding: 4px 12px; }
+#tide-range button[aria-pressed='true'] { background: var(--primary); border-color: var(--primary); }
+.tide-chart {
+  position: relative;
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 4px 0;
+  touch-action: none;
+}
+.tide-chart svg { display: block; user-select: none; }
+.tide-chart .g { stroke: var(--border); stroke-width: 1; }
+.tide-chart .gd { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.tide-chart .ax { fill: var(--muted); font-size: 10px; }
+.tide-chart .area { fill: var(--primary); opacity: 0.35; }
+.tide-chart .line { fill: none; stroke: #4cc9f0; stroke-width: 2; }
+.tide-chart .hw { fill: var(--accent); }
+.tide-chart .lw { fill: var(--text); }
+.tide-chart .ev { fill: var(--text); font-size: 10px; font-weight: 600; }
+.tide-chart .now { stroke: var(--danger); stroke-width: 2; }
+.tide-chart .nowt { fill: var(--danger); font-size: 10px; font-weight: 700; }
+.tide-chart .scrub { stroke: var(--accent); stroke-width: 1.5; }
+.tide-chart .scrubdot { fill: var(--accent); }
+:root[data-night='1'] .tide-chart .line { stroke: var(--text); }
+.tide-scrub-label {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.tide-tbl { width: 100%; border-collapse: separate; border-spacing: 0 4px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.tide-tbl th { text-align: left; color: var(--muted); font-weight: 600; padding-right: 6px; white-space: nowrap; }
+.tide-tbl td { background: var(--panel-2); padding: 4px 6px; border-radius: 6px; }
+.tide-tbl td b { font-size: 10px; text-transform: uppercase; color: var(--muted); }
+.tide-tbl td.hw b { color: var(--accent); }
+.tide-tbl td.past { opacity: 0.45; }
+
+.tide-pin {
+  transform: translate(-50%, -50%);
+  display: inline-block;
+  white-space: nowrap;
+  background: #0b2236;
+  color: #4cc9f0;
+  border: 1.5px solid #4cc9f0;
+  border-radius: 6px;
+  padding: 1px 4px;
+  font: 700 11px/1.2 system-ui, sans-serif;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.tide-pin.ref { border-width: 2.5px; color: #fff; }
+:root[data-night='1'] .tide-pin { background: #000; color: var(--text); border-color: var(--text); }
+body.sheet-tall:not(.sheet-collapsed) { --sheet-h: 64vh; }
+/* compact tide header so the curve fits on a phone without scrolling */
+.tide-head { flex-wrap: nowrap; }
+.tide-head .target-name { font-size: 17px; }
+.panel[data-panel='tide'] { gap: 8px; padding-top: 8px; }
+.panel[data-panel='tide'] #tide-body { display: flex; flex-direction: column; gap: 8px; }
+.grid3 .big { font-size: 24px; padding: 6px 10px; }
+@media (max-width: 420px) {
+  .grid3 { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .grid3 .tide-height { grid-column: auto; }
+  .grid3 .big { font-size: 21px; padding: 6px 8px; }
+  .big .sub { font-size: 11px; }
+  #tide-range .hint { display: none; }
+}

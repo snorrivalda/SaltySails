@@ -13,6 +13,7 @@ import {
   estimateDatum,
   toGpx,
 } from './geo.js';
+import { initTides } from './tide-ui.js';
 
 // ---------------------------------------------------------------------------
 // Persistence (localStorage can be unavailable; never let that break the app)
@@ -234,6 +235,17 @@ map.on('overlayadd overlayremove', () =>
   store.set('overlays', Object.keys(overlays).filter((n) => map.hasLayer(overlays[n]))),
 );
 
+// Tides (Landhelgisgæslan tide tables). The overlay is added below, once the module exists.
+const tides = initTides({
+  map,
+  store,
+  toast: (...a) => toast(...a),
+  getPos: () => state.fix,
+  onSelectTab: (t) => selectTab(t),
+});
+overlays['Tide stations'] = tides.layer;
+if (Array.isArray(savedOverlays) && savedOverlays.includes('Tide stations')) tides.layer.addTo(map);
+
 L.control.layers(baseLayers, overlays, { position: 'topright' }).addTo(map);
 L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
 
@@ -347,10 +359,13 @@ function selectTab(name) {
   document.querySelectorAll('#tabs [role="tab"]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
   document.querySelectorAll('.panel').forEach((p) => (p.hidden = p.dataset.panel !== name));
   document.body.classList.remove('sheet-collapsed');
+  // The tide view needs room for its curve; give the panel more of the screen.
+  document.body.classList.toggle('sheet-tall', name === 'tide');
   $('sheet-toggle').textContent = '▾';
   store.set('tab', name);
   if (name === 'search' || name === 'drift') refreshMarkSelects();
   if (name === 'sos') renderSos();
+  if (name === 'tide') tides.render();
   setTimeout(() => map.invalidateSize(), 50);
 }
 document.querySelectorAll('#tabs [role="tab"]').forEach((b) => b.addEventListener('click', () => selectTab(b.dataset.tab)));
@@ -410,6 +425,7 @@ function onPosition(pos) {
   else if (state.follow && !state.pickCallback) map.panTo(ll(fix), { animate: false });
 
   recordTrack(fix);
+  tides.onFix(fix);
   renderFix();
   updateNav();
 }

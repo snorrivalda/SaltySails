@@ -1,6 +1,6 @@
 // SaltySails service worker: app shell is precached so the app opens with no
 // signal; chart tiles you have viewed are cached so they keep working offline.
-const VERSION = 'v3';
+const VERSION = 'v4';
 const SHELL = `saltysails-shell-${VERSION}`;
 const TILES = 'saltysails-tiles';
 const MAX_TILES = 6000;
@@ -11,6 +11,9 @@ const SHELL_FILES = [
   'css/app.css',
   'js/app.js',
   'js/geo.js',
+  'js/tides.js',
+  'js/tide-ui.js',
+  'data/tides-2026.json',
   'data/depth-labels.json',
   'manifest.webmanifest',
   'icons/icon.svg',

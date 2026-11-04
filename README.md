@@ -16,6 +16,7 @@ screen as an app (PWA). There is no build step and no server code.
 | **Top bar** | Live GPS position (tap to switch between DDM / DMS / DD), SOG (kn), COG (°T), GPS accuracy, night-mode toggle |
 | **MOB** | One tap marks the man-overboard position, logs it with the time, vibrates, and starts navigation back to it |
 | **Nav** | Bearing, distance, ETA and cross-track error (XTE) to the active mark or search-pattern waypoint. Advances to the next waypoint automatically within ~90 m |
+| **Tide** | Official Coast Guard tide tables for the 5 reference ports and 45 secondary harbours. Shows the nearest station (or any you pick) with the height now, rising or falling and how fast, spring or neap, and the next HW/LW with countdowns. The curve covers 24 h, 3 days or 7 days; touch it to read any time. Below is a 7-day HW/LW table. Times are GMT. The *Tide stations* map overlay shows live heights; tap a pin to open it |
 | **Marks** | Add marks at own position, by tapping the chart, or by typing coordinates (`64 08.50N 021 56.30W`, `64°08.5'N 21°56.3'W`, `64.1416, -21.9383`, `64,1416; -21,9383`; `V` for *vestur* is accepted). The newest mark becomes the default search datum / LKP |
 | **Search** | IAMSAR patterns: **Expanding square (SS)**, **Sector search (VS)**, **Parallel track / creeping line (PS)**. Set first track, spacing, legs, radius, turn direction, and search speed. Shows total distance and time, previews the pattern on the chart, follows it leg by leg, and exports it as a GPX route for the chartplotter |
 | **Drift** | Simple datum estimate from LKP + time + leeway (downwind) + total water current. Save the result as a mark, or start a search from it in one tap |
@@ -42,6 +43,30 @@ Also included:
 The chart layer is a raster rendering of the paper charts. It is not an official ENC. Confirm
 with Landhelgisgæslan (sjokort@lhg.is) that SaltySails may display and cache it before
 relying on it operationally.
+
+## Tides
+
+`data/tides-2026.json` is generated from the Coast Guard's yearly tide tables PDF
+([Sjávarfallatöflur 2026](https://www.lhg.is/wp-content/uploads/2025/11/Sjavarfallatoflur_2026_vefutgafa.pdf)):
+
+- **Table I:** every high and low water at Reykjavík, Ísafjörður, Siglufjörður, Djúpivogur and Þorlákshöfn.
+- **Table II:** time differences and spring/neap height differences for 45 secondary harbours. The app
+  interpolates the height difference by the reference port's height, which is the standard method.
+- **Between HW and LW:** the cosine curve behind the tables' Table III. Unit tests check it against both
+  worked examples in the PDF.
+
+Heights are metres above chart datum. Add them to charted depths for the depth now. The tables
+assume average air pressure: about +0.1 m for every 10 hPa below 1013, and more with onshore wind.
+
+**Each November**, when the new tables come out:
+
+```bash
+python3 -I tools/make_tides.py Sjavarfallatoflur_2027_vefutgafa.pdf 2027 data/tides-2027.json
+```
+
+Then add `data/tides-2027.json` to `TIDE_FILES` in `js/tide-ui.js` and to `SHELL_FILES` in `sw.js`.
+The script refuses to write data that fails its checks: every day present, high and low water
+alternating, and plausible gaps. The app warns 30 days before the loaded tables run out.
 
 ## Running
 
