@@ -361,7 +361,11 @@ export function initWeather({ map, store, toast, getPos, marks, selectTab }) {
   async function ensureVg() {
     if (vg) return vg;
     const lib = await import('../vendor/pmtiles-vt.js');
-    vg = createVgWavesLayer(L, lib, { onStatus: setStatus });
+    // Its own pane, above every chart tile layer: in the shared tile pane the layer
+    // switcher's z-indexes put base maps (e.g. Sjókort, z 2) on top of the forecast.
+    if (!map.getPane('vg')) map.createPane('vg').style.zIndex = 250;
+    map.getPane('vg').style.pointerEvents = 'none';
+    vg = createVgWavesLayer(L, lib, { onStatus: setStatus, pane: 'vg' });
     const info = await vg.ready;
     if (info) setStatus('');
     return vg;

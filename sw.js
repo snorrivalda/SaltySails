@@ -1,6 +1,6 @@
 // SaltySails service worker: app shell is precached so the app opens with no
 // signal; chart tiles you have viewed are cached so they keep working offline.
-const VERSION = 'v10';
+const VERSION = 'v11';
 const SHELL = `saltysails-shell-${VERSION}`;
 const TILES = 'saltysails-tiles';
 const WX = 'saltysails-weather';

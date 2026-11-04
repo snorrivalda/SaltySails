@@ -99,7 +99,7 @@ export function arrowLayer(src, z) {
  * Leaflet layer. `lib` is the vendored { PMTiles, VectorTile, Pbf } module.
  * Call setTime(unixSeconds) to choose the forecast step (nearest within 90 min).
  */
-export function createVgWavesLayer(L, lib, { onStatus = () => {} } = {}) {
+export function createVgWavesLayer(L, lib, { onStatus = () => {}, pane = 'tilePane' } = {}) {
   const { PMTiles, VectorTile, Pbf } = lib;
   let sources = [];
   let masks = [];
@@ -316,6 +316,7 @@ export function createVgWavesLayer(L, lib, { onStatus = () => {} } = {}) {
   }
 
   const layer = new Layer({
+    pane,
     tileSize: 256,
     opacity: 0.85,
     className: 'vg-waves',
