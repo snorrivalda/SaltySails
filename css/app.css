@@ -431,3 +431,18 @@ body.sheet-collapsed .panel { display: none; }
   top: 0;
   accent-color: #1f8ad1;
 }
+
+/* Depth numbers on contour lines (metres) */
+.depth-label-icon { overflow: visible; }
+.depth-label {
+  position: absolute;
+  white-space: nowrap;
+  font: italic 600 12px/1 system-ui, sans-serif;
+  color: #0b4f7a;
+  text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff;
+  pointer-events: none;
+}
+:root[data-night='1'] .depth-label {
+  color: var(--text);
+  text-shadow: 0 0 2px #000, 0 0 2px #000;
+}

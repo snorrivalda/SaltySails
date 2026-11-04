@@ -141,11 +141,75 @@ const lhgWms = (layer, extra = {}) =>
     ...extra,
   });
 
+// Depth numbers for the contour lines. The LHG server cannot label lines itself
+// (custom styles are disabled), so the label positions are precomputed from the
+// LHG:dypislinur open data (see tools/make_depth_labels.py) and shipped with the
+// app, which also makes them work offline. Entries: [lat, lon, depth m, angle°, minZoom].
+const MAX_DEPTH_LABELS = 350;
+const DepthLabels = L.Layer.extend({
+  onAdd(m) {
+    this._group = L.layerGroup().addTo(m);
+    m.on('moveend', this._render, this);
+    if (!DepthLabels.data) {
+      DepthLabels.data = fetch('data/depth-labels.json')
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+        .then((j) => j.l)
+        .catch(() => {
+          DepthLabels.data = null; // retry next time the layer is switched on
+          toast('Depth numbers could not be loaded');
+          return [];
+        });
+    }
+    DepthLabels.data.then(() => this._map && this._render());
+  },
+  onRemove(m) {
+    m.off('moveend', this._render, this);
+    m.removeLayer(this._group);
+  },
+  async _render() {
+    const m = this._map;
+    if (!m) return;
+    const z = m.getZoom();
+    const all = await DepthLabels.data;
+    this._group.clearLayers();
+    if (z < 9 || !all) return;
+    const b = m.getBounds().pad(0.1);
+    const s = b.getSouth(), n = b.getNorth(), w = b.getWest(), e = b.getEast();
+    let shown = 0;
+    // Skip labels that would overlap one already placed (e.g. 10 m and 20 m lines
+    // running side by side). Coarser tiers come first in the data, so they win.
+    const CELL = 30;
+    const taken = new Set();
+    for (const [lat, lon, depth, ang, minz] of all) {
+      if (minz > z || lat < s || lat > n || lon < w || lon > e) continue;
+      const pt = m.latLngToContainerPoint([lat, lon]);
+      const cx = Math.floor(pt.x / CELL);
+      const cy = Math.floor(pt.y / CELL);
+      let clash = false;
+      for (let dx = -1; dx <= 1 && !clash; dx++) {
+        for (let dy = -1; dy <= 1 && !clash; dy++) clash = taken.has(`${cx + dx},${cy + dy}`);
+      }
+      if (clash) continue;
+      taken.add(`${cx},${cy}`);
+      if (++shown > MAX_DEPTH_LABELS) break;
+      L.marker([lat, lon], {
+        interactive: false,
+        keyboard: false,
+        icon: L.divIcon({
+          className: 'depth-label-icon',
+          iconSize: [0, 0],
+          html: `<span class="depth-label" style="transform:translate(-50%,-50%) rotate(${ang}deg)">${depth}</span>`,
+        }),
+      }).addTo(this._group);
+    }
+  },
+});
+
 const baseLayers = { 'Chart (OSM)': osm, 'Sjókort (LHG)': sjokort, Satellite: satellite };
 const overlays = {
   'Seamarks (OpenSeaMap)': seamarks,
   'Depth areas (LHG)': lhgWms('dyptarflakar', { opacity: 0.6 }),
-  'Depth contours (LHG)': lhgWms('dypislinur'),
+  'Depth contours (LHG)': L.layerGroup([lhgWms('dypislinur'), new DepthLabels()]),
   'Territorial sea 12 NM': lhgWms('landhelgi_12_milur_lina'),
   'Contiguous zone 24 NM': lhgWms('adlaekt_belti_24_milur_lina'),
   'EEZ 200 NM': lhgWms('efnahagslogsaga_lina'),

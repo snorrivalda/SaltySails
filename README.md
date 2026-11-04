@@ -28,7 +28,7 @@ Also included:
 - **Offline**: the app shell is precached, and every chart tile you view is cached (up to about 6,000 tiles). To prepare for a callout, pan and zoom over your area while you have signal
 - A **nautical-mile scale bar** next to the metric one
 - Base maps: **Sjókort (LHG)**, the official Icelandic nautical charts from Landhelgisgæslan; OSM; and Esri satellite
-- Overlays: OpenSeaMap seamarks (lights, buoys, beacons), plus LHG open data: depth areas, depth contours, the 12 NM territorial sea, the 24 NM contiguous zone, the 200 NM EEZ, and the baseline. The app remembers your layer choice
+- Overlays: OpenSeaMap seamarks (lights, buoys, beacons), plus LHG open data: depth areas, depth contours with depth numbers in metres, the 12 NM territorial sea, the 24 NM contiguous zone, the 200 NM EEZ, and the baseline. The app remembers your layer choice
 - Everything (marks, track, log, settings) is stored only on the device
 
 ## Chart sources
@@ -36,6 +36,7 @@ Also included:
 | Layer | Service | Notes |
 | --- | --- | --- |
 | Sjókort (LHG) | `https://gis.natt.is/mapcache/sjokort/web-mercator/wmst`, layer `Sjomaelingar:Sjokort_Sjomaelinga` | The same tile cache the Coast Guard's viewer uses ([atlas.lmi.is/mapview/?application=LHG](https://atlas.lmi.is/mapview/?application=LHG)) |
+| Depth numbers | Precomputed from `LHG:dypislinur` (`minz`, metres) into `data/depth-labels.json` by `tools/make_depth_labels.py` | Shown with *Depth contours (LHG)*. The LHG server can't label lines itself, so the label positions are generated once and shipped with the app, which also makes them work offline. Re-run the script if LHG updates its contours |
 | Depth / maritime limits | `https://gis.lmi.is/geoserver/LHG/wms`, layers `dyptarflakar`, `dypislinur`, `landhelgi_12_milur_lina`, `adlaekt_belti_24_milur_lina`, `efnahagslogsaga_lina`, `grunnlina` | Open data, no fees; terms at https://www.natt.is/en/resources/open-data |
 
 The chart layer is a raster rendering of the paper charts. It is not an official ENC. Confirm
