@@ -45,6 +45,7 @@ export default async function handler(req, res) {
   }
   const url = new URL(req.url, 'http://x');
   const b = parseBbox(url.searchParams.get('bbox'));
+  if (url.searchParams.has('probe')) return probe(key, b, res);
 
   res.writeHead(200, {
     'content-type': 'text/event-stream; charset=utf-8',
@@ -95,4 +96,49 @@ export default async function handler(req, res) {
     res.write(`event: status\ndata: ${JSON.stringify({ error: 'upstream connection failed' })}\n\n`);
     finish();
   });
+}
+
+/**
+ * Health check: connect for up to 8 s and summarise what arrives (no message
+ * content beyond MMSI, name and type). GET /api/ais?probe=1&bbox=…
+ */
+function probe(key, b, res) {
+  const started = Date.now();
+  const out = { connected: false, messages: 0, types: {}, sample: [], bbox: b };
+  const ws = new WebSocket(process.env.AISSTREAM_URL || 'wss://stream.aisstream.io/v0/stream');
+  let done = false;
+  const finish = (error) => {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    try {
+      ws.close();
+    } catch {}
+    out.ms = Date.now() - started;
+    if (error) out.error = error;
+    console.log('ais probe', JSON.stringify({ connected: out.connected, messages: out.messages, error: out.error }));
+    res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
+    res.end(JSON.stringify(out));
+  };
+  const timer = setTimeout(() => finish(), 8000);
+  ws.addEventListener('open', () => {
+    out.connected = true;
+    ws.send(JSON.stringify({ APIKey: key, BoundingBoxes: [[[b.south, b.west], [b.north, b.east]]], FilterMessageTypes: TYPES }));
+  });
+  ws.addEventListener('message', async (ev) => {
+    const text = typeof ev.data === 'string' ? ev.data : await new Response(ev.data).text();
+    let j;
+    try {
+      j = JSON.parse(text);
+    } catch {
+      return;
+    }
+    if (j.error) return finish(String(j.error));
+    out.messages++;
+    out.types[j.MessageType] = (out.types[j.MessageType] || 0) + 1;
+    if (out.sample.length < 5) out.sample.push({ mmsi: j.MetaData?.MMSI, name: j.MetaData?.ShipName?.trim(), type: j.MessageType });
+    if (out.messages >= 25) finish();
+  });
+  ws.addEventListener('error', () => finish('upstream connection failed'));
+  ws.addEventListener('close', () => finish());
 }

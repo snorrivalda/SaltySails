@@ -50,3 +50,25 @@ test('relay subscribes with key + bbox and streams messages as SSE', async () =>
   delete process.env.AISSTREAM_API_KEY;
   delete process.env.AISSTREAM_URL;
 });
+
+test('probe summarises the upstream stream as JSON', async () => {
+  const wss = new WebSocketServer({ port: 0 });
+  wss.on('connection', (sock) =>
+    sock.on('message', () => {
+      for (let i = 0; i < 3; i++)
+        sock.send(JSON.stringify({ MessageType: 'PositionReport', MetaData: { MMSI: 251000000 + i, ShipName: `S${i}  ` }, Message: { PositionReport: {} } }));
+      sock.close();
+    }),
+  );
+  process.env.AISSTREAM_API_KEY = 'k';
+  process.env.AISSTREAM_URL = `ws://127.0.0.1:${wss.address().port}`;
+  const srv = createServer(handler).listen(0);
+  const r = await (await fetch(`http://127.0.0.1:${srv.address().port}/api/ais?probe=1`)).json();
+  srv.close();
+  wss.close();
+  assert.equal(r.connected, true);
+  assert.equal(r.messages, 3);
+  assert.equal(r.sample[0].name, 'S0');
+  delete process.env.AISSTREAM_API_KEY;
+  delete process.env.AISSTREAM_URL;
+});
