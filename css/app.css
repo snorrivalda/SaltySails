@@ -770,3 +770,4 @@ label.check input { width: 22px; min-height: 22px; height: 22px; flex: none; acc
 :root[data-night='1'] .ais-label { background: #000; color: var(--text); }
 :root[data-night='1'] .ais-alarm button,
 :root[data-night='1'] .ais-pop button { background: #000; color: var(--text); border: 1px solid var(--text); }
+:root[data-night='1'] .vg-waves { filter: grayscale(1) sepia(1) hue-rotate(-50deg) saturate(5) brightness(0.6); }

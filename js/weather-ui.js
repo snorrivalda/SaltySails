@@ -19,6 +19,7 @@ import {
   fillGaps,
 } from './weather.js';
 import { distanceNm, formatPosition } from './geo.js';
+import { createVgWavesLayer, BANDS as VG_BANDS, bandForColor } from './vg-waves.js';
 
 const HOUR = 3600;
 const GRID_TTL = 60 * 60 * 1000; // refetch grid points after an hour
@@ -162,15 +163,22 @@ export function initWeather({ map, store, toast, getPos, marks, selectTab }) {
         grid = { g, series };
         const first = series.find(Boolean);
         if (first && (!times.length || first.time[0] !== times[0])) setTimes(first.time);
-        setStatus(series.some((s) => !s) ? 'Some forecast points unavailable' : '');
+        if (mode !== 'vg') setStatus(series.some((s) => !s) ? 'Some forecast points unavailable' : '');
       } catch (e) {
-        setStatus('Forecast unavailable (offline?)');
+        setStatus(mode === 'vg' ? '' : 'Forecast unavailable (offline or rate-limited; try again shortly)');
         return;
       }
       this.draw();
     },
     draw() {
-      if (!grid || !this._map) return;
+      if (!this._map) return;
+      if (mode === 'vg') {
+        // Vegagerðin wave forecast is drawn by its own tile layer; keep this one empty.
+        cancelAnimationFrame(this._raf);
+        for (const c of [this._field, this._flow]) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+        return;
+      }
+      if (!grid) return;
       const { g, series } = grid;
       const m = MODES[mode];
       const idx = series.map((s) => (s ? timeIndex(s.time, times[ti]) : -1));
@@ -339,6 +347,47 @@ export function initWeather({ map, store, toast, getPos, marks, selectTab }) {
     b.addEventListener('click', () => setMode(k));
     $('wx-modes').appendChild(b);
   }
+  {
+    const b = document.createElement('button');
+    b.dataset.mode = 'vg';
+    b.textContent = 'Ölduspá';
+    b.title = 'Vegagerðin wave forecast (sjolag.is): offshore and high-resolution coastal models';
+    b.addEventListener('click', () => setMode('vg'));
+    $('wx-modes').appendChild(b);
+  }
+
+  // Vegagerðin wave forecast layer, created on first use (loads the PMTiles reader).
+  let vg = null;
+  async function ensureVg() {
+    if (vg) return vg;
+    const lib = await import('../vendor/pmtiles-vt.js');
+    vg = createVgWavesLayer(L, lib, { onStatus: setStatus });
+    const info = await vg.ready;
+    if (info) setStatus('');
+    return vg;
+  }
+  async function syncVg() {
+    const want = active && mode === 'vg';
+    if (!want) {
+      if (vg && map.hasLayer(vg.layer)) map.removeLayer(vg.layer);
+      return;
+    }
+    setStatus('Loading Vegagerðin wave forecast…');
+    const v = await ensureVg();
+    if (!(active && mode === 'vg')) return;
+    if (!map.hasLayer(v.layer)) v.layer.addTo(map);
+    // Don't depend on Open-Meteo for the time slider: use Vegagerðin's own steps if needed.
+    if (!times.length && v.times.length) {
+      setTimes(v.times.map((k) => Date.UTC(+k.slice(0, 4), +k.slice(4, 6) - 1, +k.slice(6, 8), +k.slice(8, 10)) / 1000));
+    }
+    applyVgTime();
+  }
+  function applyVgTime() {
+    if (!vg || mode !== 'vg' || !times.length) return;
+    const k = vg.setTime(times[ti]);
+    setStatus(k ? 'Vegagerðin ölduspá (sjolag.is)' : 'No Vegagerðin forecast for this time (3-hourly, ~10 days)');
+  }
+
   $('wx-time').addEventListener('input', (e) => setTi(Number(e.target.value)));
   $('wx-play').addEventListener('click', () => (playing ? stop() : play()));
   $('wx-close').addEventListener('click', () => setActive(false));
@@ -354,6 +403,7 @@ export function initWeather({ map, store, toast, getPos, marks, selectTab }) {
       stop();
       map.removeLayer(wxLayer);
     }
+    syncVg();
   }
   function setMode(k) {
     mode = k;
@@ -361,6 +411,7 @@ export function initWeather({ map, store, toast, getPos, marks, selectTab }) {
     document.querySelectorAll('#wx-modes button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === k)));
     renderLegend();
     wxLayer.draw();
+    syncVg();
   }
   function setTimes(t) {
     times = t;
@@ -376,6 +427,7 @@ export function initWeather({ map, store, toast, getPos, marks, selectTab }) {
     $('wx-time').value = ti;
     renderTimeLabel();
     wxLayer.draw();
+    applyVgTime();
   }
   function play() {
     $('wx-play').textContent = '❚❚';
@@ -393,6 +445,13 @@ export function initWeather({ map, store, toast, getPos, marks, selectTab }) {
     $('wx-time-label').textContent = `${dayLabel(t)} ${hhmm(t)} GMT${dh ? ` (${dh > 0 ? '+' : ''}${dh} h)` : ' (now)'}`;
   }
   function renderLegend() {
+    if (mode === 'vg') {
+      // sjolag.is's discrete bands
+      const n = VG_BANDS.length;
+      $('wx-legend').innerHTML = `<div class="wx-grad" style="background:linear-gradient(90deg,${VG_BANDS.map(([, c], i) => `${c} ${(i / n) * 100}% ${((i + 1) / n) * 100}%`).join(',')})"></div>
+        <div class="wx-ticks">${VG_BANDS.map(([v], i) => (i % 3 === 0 ? `<span style="left:${(i / n) * 100}%">${v}</span>` : '')).join('')}<span class="u">m</span></div>`;
+      return;
+    }
     const sc = scaleFor(mode);
     const max = sc[sc.length - 1][0];
     const stops = sc.map(([v, c]) => `rgb(${c}) ${((v / max) * 100).toFixed(0)}%`).join(',');
@@ -409,6 +468,7 @@ export function initWeather({ map, store, toast, getPos, marks, selectTab }) {
   // Tap the chart (when weather is on) to read the value there.
   map.on('click', (e) => {
     if (!active || document.getElementById('pick-banner').hidden === false) return;
+    if (mode === 'vg') return vgPopup(e);
     const s = wxLayer.valueAt(e.latlng);
     if (!s || !Number.isFinite(s.v)) return;
     const m = MODES[mode];
@@ -419,6 +479,30 @@ export function initWeather({ map, store, toast, getPos, marks, selectTab }) {
       .setContent(`<b>${m.label} ${r1(s.v)} ${m.unit}</b><br>${how}<br><small>${dayLabel(times[ti])} ${hhmm(times[ti])} GMT</small>`)
       .openOn(map);
   });
+
+  // Read the wave-height band under the tap from the drawn tile's pixel colour.
+  function vgPopup(e) {
+    if (!vg || !map.hasLayer(vg.layer)) return;
+    const { x, y } = e.originalEvent ?? {};
+    // Leaflet tiles have pointer-events: none, so find the tile under the tap by its position.
+    const el = [...map.getContainer().querySelectorAll('canvas.vg-tile')].find((n) => {
+      const b = n.getBoundingClientRect();
+      return x >= b.left && x < b.right && y >= b.top && y < b.bottom;
+    });
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const px = el.getContext('2d').getImageData(((x - r.left) / r.width) * el.width, ((y - r.top) / r.height) * el.height, 1, 1).data;
+    const hex = `#${[px[0], px[1], px[2]].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+    const band = px[3] ? bandForColor(hex) : null;
+    L.popup({ className: 'wx-popup' })
+      .setLatLng(e.latlng)
+      .setContent(
+        band
+          ? `<b>Waves ${band[0]}${band[1] != null ? `–${band[1]}` : '+'} m</b><br>Vegagerðin ölduspá<br><small>${dayLabel(times[ti])} ${hhmm(times[ti])} GMT</small>`
+          : 'No wave band here (tap open water)',
+      )
+      .openOn(map);
+  }
 
   // ---------------------------------------------------------------- forecast tab
   const locSel = $('wx-loc');

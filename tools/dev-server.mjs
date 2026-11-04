@@ -27,6 +27,18 @@ createServer(async (req, res) => {
   try {
     if (url.pathname === '/api/ais') return aisRelay(req, res);
     if (url.pathname === '/api/ais-lhg') return lhgRelay(req, res);
+    const pm = /^\/api\/sjolag-(tiles|static)\/(.*)$/.exec(url.pathname);
+    if (pm) {
+      // forward Range for PMTiles
+      const r = await fetch(`https://sjolag.is/${pm[1]}/${pm[2]}${url.search}`, {
+        headers: req.headers.range ? { range: req.headers.range } : {},
+      });
+      const h = { 'content-type': r.headers.get('content-type') || 'application/octet-stream' };
+      for (const k of ['content-range', 'accept-ranges', 'etag', 'last-modified']) if (r.headers.get(k)) h[k] = r.headers.get(k);
+      res.writeHead(r.status, h);
+      res.end(Buffer.from(await r.arrayBuffer()));
+      return;
+    }
     if (url.pathname.startsWith('/api/sjolag/')) {
       const r = await fetch(`https://sjolag.is/api/${url.pathname.slice('/api/sjolag/'.length)}${url.search}`);
       res.writeHead(r.status, { 'content-type': r.headers.get('content-type') || 'application/json' });

@@ -1,11 +1,27 @@
 {
   "rewrites": [
-    { "source": "/api/sjolag/:path*", "destination": "https://sjolag.is/api/:path*" }
+    {
+      "source": "/api/sjolag/:path*",
+      "destination": "https://sjolag.is/api/:path*"
+    },
+    {
+      "source": "/api/sjolag-tiles/:path*",
+      "destination": "https://sjolag.is/tiles/:path*"
+    },
+    {
+      "source": "/api/sjolag-static/:path*",
+      "destination": "https://sjolag.is/static/:path*"
+    }
   ],
   "headers": [
     {
       "source": "/api/sjolag/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=60, s-maxage=60" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, s-maxage=60"
+        }
+      ]
     }
   ]
 }
