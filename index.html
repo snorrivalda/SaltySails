@@ -130,7 +130,7 @@
       <ul id="ais-list" class="list"></ul>
       <details class="ais-settings" id="ais-settings">
         <summary><b>AIS sources</b>
-          <span class="muted small">Onboard: <span id="ais-st-onboard" class="ais-st">off</span> · Internet: <span id="ais-st-internet" class="ais-st">off</span></span>
+          <span class="muted small">Onboard: <span id="ais-st-onboard" class="ais-st">off</span> · Internet: <span id="ais-st-internet" class="ais-st">off</span> · LHG: <span id="ais-st-lhg" class="ais-st">off</span></span>
         </summary>
         <label class="check"><input type="checkbox" id="ais-onboard"> Onboard receiver (Signal K or NMEA over WebSocket)</label>
         <input id="ais-url" placeholder="wss://boat.local:3443/signalk/v1/stream" autocomplete="off" inputmode="url">
@@ -138,6 +138,9 @@
         <label class="check"><input type="checkbox" id="ais-boatgps"> Use the boat's GPS from Signal K for own position</label>
         <label class="check"><input type="checkbox" id="ais-internet"> Internet AIS (aisstream.io)</label>
         <p class="muted small">Land-based AIS receivers over mobile data, around the chart view. Coverage depends on shore stations and stops when you lose signal.</p>
+        <label class="check"><input type="checkbox" id="ais-lhg"> Landhelgisgæslan AIS (via the SaltySails relay)</label>
+        <input id="ais-lhg-token" type="password" placeholder="Access code" autocomplete="off">
+        <p class="muted small">Only with a data-sharing agreement with Landhelgisgæslan. The access code is issued to your crew and kept on this device.</p>
         <div class="form-grid">
           <label>CPA alarm NM <input id="ais-cpa" type="number" min="0" step="0.1"></label>
           <label>within (min) <input id="ais-tcpa" type="number" min="1" step="1"></label>

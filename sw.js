@@ -1,6 +1,6 @@
 // SaltySails service worker: app shell is precached so the app opens with no
 // signal; chart tiles you have viewed are cached so they keep working offline.
-const VERSION = 'v7';
+const VERSION = 'v8';
 const SHELL = `saltysails-shell-${VERSION}`;
 const TILES = 'saltysails-tiles';
 const WX = 'saltysails-weather';
@@ -116,7 +116,7 @@ self.addEventListener('fetch', (event) => {
 
   // App shell: network-first so updates arrive, cache fallback when offline.
   // Live AIS stream (Server-Sent Events): never cache, let the browser handle it.
-  if (url.origin === self.location.origin && url.pathname.endsWith('/api/ais')) return;
+  if (url.origin === self.location.origin && /\/api\/ais(-lhg)?$/.test(url.pathname)) return;
 
   if (url.origin === self.location.origin) {
     event.respondWith(

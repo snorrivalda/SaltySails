@@ -1,5 +1,6 @@
 /* global L */
-// AIS: onboard (Signal K / NMEA over WebSocket) and internet (aisstream.io via /api/ais) sources,
+// AIS: onboard (Signal K / NMEA over WebSocket), internet (aisstream.io via /api/ais) and
+// Landhelgisgæslan (via /api/ais-lhg, needs an agreement and access code) sources,
 // map layer, AIS tab (status, settings, target list) and SAR/CPA alarms.
 import {
   createNmeaDecoder,
@@ -73,10 +74,12 @@ export function initAis({ map, store: kv, getPos, toast, addMark, goTo, addLog, 
     onboard: kv.get('aisOnboard', false),
     boatGps: kv.get('aisBoatGps', false),
     internet: kv.get('aisInternet', false),
+    lhg: kv.get('aisLhg', false),
+    lhgToken: kv.get('aisLhgToken', ''),
     cpaNm: kv.get('aisCpaNm', 0.5),
     tcpaMin: kv.get('aisTcpaMin', 12),
   };
-  const status = { onboard: 'off', internet: 'off' };
+  const status = { onboard: 'off', internet: 'off', lhg: 'off' };
   const alarmed = new Map(); // mmsi -> time of last alarm
   const layer = L.layerGroup();
   const vectors = L.layerGroup().addTo(layer);
@@ -228,6 +231,61 @@ export function initAis({ map, store: kv, getPos, toast, addMark, goTo, addLog, 
     };
   }
   map.on('moveend', () => cfg.internet && connectInternet());
+
+  // Landhelgisgæslan feed through /api/ais-lhg (requires an agreement with LHG and an access code).
+  let lhgEs = null;
+  let lhgBox = null;
+  const lhgShips = new Set();
+  function connectLhg(force = false) {
+    if (!cfg.lhg) {
+      if (lhgEs) lhgEs.close();
+      lhgEs = null;
+      setStatus('lhg', 'off');
+      return;
+    }
+    if (!cfg.lhgToken) {
+      setStatus('lhg', 'enter the access code');
+      return;
+    }
+    const box = wantedBox();
+    if (!force && lhgEs && lhgBox) {
+      const moved = Math.abs((box[0] + box[2]) / 2 - (lhgBox[0] + lhgBox[2]) / 2) > (lhgBox[2] - lhgBox[0]) / 3 || Math.abs((box[1] + box[3]) / 2 - (lhgBox[1] + lhgBox[3]) / 2) > (lhgBox[3] - lhgBox[1]) / 3;
+      if (!moved) return;
+    }
+    if (lhgEs) lhgEs.close();
+    lhgBox = box;
+    const url = `api/ais-lhg?token=${encodeURIComponent(cfg.lhgToken)}&bbox=${box.join(',')}`;
+    setStatus('lhg', 'connecting…');
+    lhgEs = new EventSource(url);
+    lhgEs.addEventListener('status', (ev) => {
+      try {
+        const st = JSON.parse(ev.data);
+        setStatus('lhg', st.error ? `error: ${st.error}` : `connected (Landhelgisgæslan) · ${lhgShips.size} ships`);
+      } catch {}
+    });
+    lhgEs.onmessage = (ev) => {
+      try {
+        const m = JSON.parse(ev.data); // already decoded by the relay
+        lhgShips.add(m.mmsi);
+        setStatus('lhg', `connected (Landhelgisgæslan) · ${lhgShips.size} ships`);
+        ingest(m, 'lhg');
+      } catch {}
+    };
+    lhgEs.onerror = async () => {
+      if (lhgEs.readyState !== EventSource.CLOSED) return setStatus('lhg', 'reconnecting…');
+      // find out why: not configured (503) or wrong code (401)
+      const ctrl = new AbortController();
+      try {
+        const r = await fetch(url, { signal: ctrl.signal });
+        ctrl.abort();
+        if (r.status === 503) return setStatus('lhg', 'not set up yet (needs an agreement with Landhelgisgæslan)');
+        if (r.status === 401) return setStatus('lhg', 'wrong access code');
+      } catch {}
+      setStatus('lhg', 'offline, retrying…');
+      setTimeout(() => connectLhg(true), 15000);
+    };
+  }
+  map.on('moveend', () => cfg.lhg && connectLhg());
 
   // ------------------------------------------------------------ alarms
   function distressAlarm(t) {
@@ -407,6 +465,8 @@ export function initAis({ map, store: kv, getPos, toast, addMark, goTo, addLog, 
   $('ais-onboard').checked = cfg.onboard;
   $('ais-boatgps').checked = cfg.boatGps;
   $('ais-internet').checked = cfg.internet;
+  $('ais-lhg').checked = cfg.lhg;
+  $('ais-lhg-token').value = cfg.lhgToken;
   $('ais-cpa').value = cfg.cpaNm;
   $('ais-tcpa').value = cfg.tcpaMin;
   const save = () => {
@@ -414,12 +474,16 @@ export function initAis({ map, store: kv, getPos, toast, addMark, goTo, addLog, 
     cfg.onboard = $('ais-onboard').checked;
     cfg.boatGps = $('ais-boatgps').checked;
     cfg.internet = $('ais-internet').checked;
+    cfg.lhg = $('ais-lhg').checked;
+    cfg.lhgToken = $('ais-lhg-token').value.trim();
     cfg.cpaNm = Number($('ais-cpa').value) || 0;
     cfg.tcpaMin = Number($('ais-tcpa').value) || 12;
     kv.set('aisOnboardUrl', cfg.onboardUrl);
     kv.set('aisOnboard', cfg.onboard);
     kv.set('aisBoatGps', cfg.boatGps);
     kv.set('aisInternet', cfg.internet);
+    kv.set('aisLhg', cfg.lhg);
+    kv.set('aisLhgToken', cfg.lhgToken);
     kv.set('aisCpaNm', cfg.cpaNm);
     kv.set('aisTcpaMin', cfg.tcpaMin);
   };
@@ -432,9 +496,17 @@ export function initAis({ map, store: kv, getPos, toast, addMark, goTo, addLog, 
     save();
     if (cfg.onboard) connectOnboard();
   });
+  for (const id of ['ais-lhg', 'ais-lhg-token']) {
+    $(id).addEventListener('change', () => {
+      save();
+      connectLhg(true);
+      if (cfg.lhg) layer.addTo(map);
+    });
+  }
   $('ais-internet').addEventListener('change', () => {
     save();
     connectInternet(true);
+  connectLhg(true);
     if (cfg.internet) layer.addTo(map);
   });
   for (const id of ['ais-boatgps', 'ais-cpa', 'ais-tcpa']) $(id).addEventListener('change', save);
