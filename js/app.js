@@ -15,6 +15,7 @@ import {
 } from './geo.js';
 import { initTides } from './tide-ui.js';
 import { initWeather } from './weather-ui.js';
+import { initWarnings } from './warnings-ui.js';
 
 // ---------------------------------------------------------------------------
 // Persistence (localStorage can be unavailable; never let that break the app)
@@ -271,6 +272,14 @@ const weather = initWeather({
 overlays['Measured waves & wind (Vegagerðin)'] = weather.obsLayer;
 if (Array.isArray(savedOverlays) && savedOverlays.includes('Measured waves & wind (Vegagerðin)')) weather.obsLayer.addTo(map);
 
+// Icelandic Met Office warnings. Shown on the chart by default: it's safety information.
+const warningsUi = initWarnings({ map, store, getPos: () => state.fix, selectTab: (t) => selectTab(t) });
+overlays['Weather warnings (Veðurstofa)'] = warningsUi.layer;
+if (!Array.isArray(savedOverlays) || savedOverlays.includes('Weather warnings (Veðurstofa)') || !store.get('warnLayerSeen', false)) {
+  warningsUi.layer.addTo(map);
+}
+store.set('warnLayerSeen', true);
+
 L.control.layers(baseLayers, overlays, { position: 'topright' }).addTo(map);
 L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
 
@@ -452,6 +461,7 @@ function onPosition(pos) {
 
   recordTrack(fix);
   tides.onFix(fix);
+  warningsUi.onFix(fix);
   renderFix();
   updateNav();
 }

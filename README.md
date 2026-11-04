@@ -18,6 +18,7 @@ screen as an app (PWA). There is no build step and no server code.
 | **Nav** | Bearing, distance, ETA and cross-track error (XTE) to the active mark or search-pattern waypoint. Advances to the next waypoint automatically within ~90 m |
 | **Tide** | Official Coast Guard tide tables for the 5 reference ports and 45 secondary harbours. Shows the nearest station (or any you pick) with the height now, rising or falling and how fast, spring or neap, and the next HW/LW with countdowns. The curve covers 24 h, 3 days or 7 days; touch it to read any time. Below is a 7-day HW/LW table. Times are GMT. The *Tide stations* map overlay shows live heights; tap a pin to open it |
 | **Weather** | Forecast for your position, the chart centre or any mark: wind, gusts and Beaufort, waves, period and swell, current, pressure, air and sea temperature, rain and visibility. 3-hourly for 7 days in a Windguru-style colour table, plus the nearest measured buoy, coastal wind station and harbour sea level from Vegagerðin |
+| **Warnings** | Official Icelandic Met Office weather warnings (yellow, orange, red). A banner appears when one covers your position or is within 10 NM. It shows what applies now and any worse warning coming. The Weather tab lists all warnings, nearest first, in English (wind also in knots) and Icelandic. The *Weather warnings (Veðurstofa)* map overlay is on by default; warnings not yet in force are dashed. The last warnings fetched are kept for offline use and marked with their age |
 | **Wx (map)** | Windy-style layer: a colour field for wind, gusts, waves, swell or current, with animated particles for wind and current and direction arrows for waves. Includes a 7-day time slider with play and a legend. Tap the chart to read the value there |
 | **Marks** | Add marks at own position, by tapping the chart, or by typing coordinates (`64 08.50N 021 56.30W`, `64°08.5'N 21°56.3'W`, `64.1416, -21.9383`, `64,1416; -21,9383`; `V` for *vestur* is accepted). The newest mark becomes the default search datum / LKP |
 | **Search** | IAMSAR patterns: **Expanding square (SS)**, **Sector search (VS)**, **Parallel track / creeping line (PS)**. Set first track, spacing, legs, radius, turn direction, and search speed. Shows total distance and time, previews the pattern on the chart, follows it leg by leg, and exports it as a GPX route for the chartplotter |
@@ -81,6 +82,12 @@ alternating, and plausible gaps. The app warns 30 days before the loaded tables 
 Forecasts you have viewed are cached and used when offline. The Tide tab adds Vegagerðin's modelled storm surge
 for the nearest harbour (within 15 NM) to the table height.
 
+Weather warnings come from the Icelandic Met Office's CAP feed (`https://api.vedur.is/cap`, Common Alerting Protocol 1.2):
+the active list (`/capbroker/active/category/met`, where 204 means none), then each full message. Updates and cancellations
+replace the messages they refer to. The feed covers the land forecast regions, whose areas include the coast. Gale
+warnings for the offshore fishing areas (*stormviðvörun á miðum*) are not in this feed, so check them in the Met
+Office's marine forecasts. Unit tests use real messages from 14 Oct 2026 (`test/fixtures`).
+
 Always check the Icelandic Met Office's marine forecasts and warnings (vedur.is). The app does not replace them.
 
 ## Running
@@ -124,7 +131,7 @@ test/geo.test.js      unit tests
 ## Ideas / roadmap
 
 - Use Vegagerðin's own open data service (gagnaveita.vegagerdin.is) directly instead of the sjolag.is website API
-- Weather warnings from the Icelandic Met Office (vedur.is)
+- Gale warnings for the offshore fishing areas (stormviðvaranir á miðum), if the Met Office publishes them in machine-readable form
 - AIS overlay (via a NMEA/Signal K gateway on board) to see other SAR units
 - Shared incident: sync marks, datum and assigned search areas between units
 - IAMSAR leeway tables by object type, and datum lines/areas with probability of

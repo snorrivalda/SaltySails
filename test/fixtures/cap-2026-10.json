@@ -1,0 +1,185 @@
+[
+ {
+  "alert": {
+   "@xmlns": "urn:oasis:names:tc:emergency:cap:1.2",
+   "identifier": "is-IMO-01164f85-9f82-451a-9fa0-b93fa5860645",
+   "info": [
+    {
+     "area": {
+      "areaDesc": "Vestfirðir",
+      "geocode": {
+       "value": "Vestfirðir",
+       "valueName": "Spásvæði"
+      },
+      "polygon": "65.81,-24.11 66.06,-23.86 66.3,-23.27 66.56,-23.1 66.52,-22.87 66.47,-22.58 65.99,-22 65.7,-22 65.69,-22.54 65.65,-23.01 65.6,-23.39 65.59,-23.65 65.71,-24.01 65.81,-24.11"
+     },
+     "category": "Met",
+     "certainty": "Likely",
+     "contact": "forecaster@vedur.is",
+     "description": "Norðaustan og síðar norðan 15-25 m/s og snarpar vindhviður. Talsverð eða mikil rigning, slydda eða snjókoma, snjólínan færist neðar eftir því sem á líður. Slæmt ferðaveður. Lausamunir geta fokið.",
+     "event": "Veðurviðvörun: Hríð",
+     "eventCode": {
+      "value": "Snow storm",
+      "valueName": "alertType"
+     },
+     "expires": "2026-10-14T17:00:00-00:00",
+     "headline": "Norðaustan hríð",
+     "language": "is-IS",
+     "onset": "2026-10-14T11:00:00-00:00",
+     "parameter": {
+      "value": "Yellow",
+      "valueName": "Color"
+     },
+     "resource": {
+      "digest": "eba317ed1a2f6f99d2a52473bba8a83264f68bbf",
+      "mimeType": "image/png",
+      "resourceDesc": "Icon: Snjó Stormur",
+      "size": "19010",
+      "uri": "https://cdn.vedur.is/cap/v1/icons/yellow_wind_snow.png"
+     },
+     "responseType": "Monitor",
+     "senderName": "IMO - Meteorologist on duty",
+     "severity": "Moderate",
+     "urgency": "Future",
+     "web": "http://www.vedur.is/#spasvaedi=ve"
+    },
+    {
+     "area": {
+      "areaDesc": "Westfjords",
+      "geocode": {
+       "value": "Westfjords",
+       "valueName": "Forecast Region"
+      },
+      "polygon": "65.81,-24.11 66.06,-23.86 66.3,-23.27 66.56,-23.1 66.52,-22.87 66.47,-22.58 65.99,-22 65.7,-22 65.69,-22.54 65.65,-23.01 65.6,-23.39 65.59,-23.65 65.71,-24.01 65.81,-24.11"
+     },
+     "category": "Met",
+     "certainty": "Likely",
+     "contact": "forecaster@vedur.is",
+     "description": "Northeast and later north 15-25 m/s and strong windgusts. Considerable or heavy rain/sleet/snow, the snow level is expected to lower during the period. Travelling can be hazardous. Loose objects outside can be blown away.",
+     "event": "Weather Warning: Snow Storm",
+     "eventCode": {
+      "value": "Snow storm",
+      "valueName": "alertType"
+     },
+     "expires": "2026-10-14T17:00:00-00:00",
+     "headline": "Northeast snowstorm",
+     "language": "en-US",
+     "onset": "2026-10-14T11:00:00-00:00",
+     "parameter": {
+      "value": "Yellow",
+      "valueName": "Color"
+     },
+     "resource": {
+      "digest": "eba317ed1a2f6f99d2a52473bba8a83264f68bbf",
+      "mimeType": "image/png",
+      "resourceDesc": "Icon: Snow Storm",
+      "size": "19010",
+      "uri": "https://cdn.vedur.is/cap/v1/icons/yellow_wind_snow.png"
+     },
+     "responseType": "Monitor",
+     "senderName": "IMO - Meteorologist on duty",
+     "severity": "Moderate",
+     "urgency": "Future",
+     "web": "http://en.vedur.is/#forec_area=ve"
+    }
+   ],
+   "msgType": "Alert",
+   "scope": "Public",
+   "sender": "IMO-Icelandic_Met_Office",
+   "sent": "2026-10-12T12:42:47-00:00",
+   "status": "Actual"
+  }
+ },
+ {
+  "alert": {
+   "@xmlns": "urn:oasis:names:tc:emergency:cap:1.2",
+   "identifier": "is-IMO-01c2a763-546d-4680-abf1-9ae04f3028ad",
+   "info": [
+    {
+     "area": {
+      "areaDesc": "Suðurland",
+      "geocode": {
+       "value": "Suðurland",
+       "valueName": "Spásvæði"
+      },
+      "polygon": "63.8,-22.8 64.39,-20.61 64.37,-20.18 64.21,-19.72 64,-19.74 63.88,-19.56 63.55,-19.43 63.53,-19.1 63.38,-19.1 63.37,-20.34 63.75,-20.96 63.8,-22.8"
+     },
+     "category": "Met",
+     "certainty": "Likely",
+     "contact": "forecaster@vedur.is",
+     "description": "Austan og norðaustan 18-28 m/s og vindhviður staðbundið yfir 40 m/s, hvassast syðst. Talsverð rigning á láglendi. Ekkert ferðaveður. Lausamunir geta fokið.",
+     "event": "Veðurviðvörun: Vindur",
+     "eventCode": {
+      "value": "Wind",
+      "valueName": "alertType"
+     },
+     "expires": "2026-10-14T10:00:00-00:00",
+     "headline": "Austan og norðaustan stormur",
+     "language": "is-IS",
+     "onset": "2026-10-14T05:00:00-00:00",
+     "parameter": {
+      "value": "Orange",
+      "valueName": "Color"
+     },
+     "resource": {
+      "digest": "90fb8eb064f4c467b88feb9709baf1295ef3737c",
+      "mimeType": "image/png",
+      "resourceDesc": "Icon: Vindur",
+      "size": "17118",
+      "uri": "https://cdn.vedur.is/cap/v1/icons/orange_wind.png"
+     },
+     "responseType": "Monitor",
+     "senderName": "IMO - Meteorologist on duty",
+     "severity": "Severe",
+     "urgency": "Future",
+     "web": "http://www.vedur.is/#spasvaedi=su"
+    },
+    {
+     "area": {
+      "areaDesc": "South Iceland",
+      "geocode": {
+       "value": "South Iceland",
+       "valueName": "Forecast Region"
+      },
+      "polygon": "63.8,-22.8 64.39,-20.61 64.37,-20.18 64.21,-19.72 64,-19.74 63.88,-19.56 63.55,-19.43 63.53,-19.1 63.38,-19.1 63.37,-20.34 63.75,-20.96 63.8,-22.8"
+     },
+     "category": "Met",
+     "certainty": "Likely",
+     "contact": "forecaster@vedur.is",
+     "description": "East and northeast 18-28 m/s with windgusts locally over 40 m/s, strongest wind in the southernmost part. Considerable rain in lowland ares. Travelling is not advised. Loose objects outside can be blown away.",
+     "event": "Weather Warning: Wind",
+     "eventCode": {
+      "value": "Wind",
+      "valueName": "alertType"
+     },
+     "expires": "2026-10-14T10:00:00-00:00",
+     "headline": "East and northeast strong gales",
+     "language": "en-US",
+     "onset": "2026-10-14T05:00:00-00:00",
+     "parameter": {
+      "value": "Orange",
+      "valueName": "Color"
+     },
+     "resource": {
+      "digest": "90fb8eb064f4c467b88feb9709baf1295ef3737c",
+      "mimeType": "image/png",
+      "resourceDesc": "Icon: Wind",
+      "size": "17118",
+      "uri": "https://cdn.vedur.is/cap/v1/icons/orange_wind.png"
+     },
+     "responseType": "Monitor",
+     "senderName": "IMO - Meteorologist on duty",
+     "severity": "Severe",
+     "urgency": "Future",
+     "web": "http://en.vedur.is/#forec_area=su"
+    }
+   ],
+   "msgType": "Update",
+   "scope": "Public",
+   "sender": "IMO-Icelandic_Met_Office",
+   "sent": "2026-10-13T17:37:40-00:00",
+   "status": "Actual",
+   "references": "IMO-Icelandic_Met_Office,is-IMO-03f22163-8538-4f29-8a62-1786d4321382,2026-10-13T11:29:47-00:00"
+  }
+ }
+]

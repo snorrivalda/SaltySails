@@ -25,6 +25,8 @@
     <button id="night" class="icon-btn" title="Night mode (red)" aria-label="Toggle night mode">☾</button>
   </header>
 
+  <button id="warn-banner" class="warn-banner" hidden></button>
+
   <main id="map" aria-label="Chart"></main>
 
   <div id="map-controls">
@@ -115,6 +117,7 @@
         <select id="wx-loc" aria-label="Forecast location"></select>
         <button id="wx-refresh" class="icon-btn" aria-label="Refresh forecast" title="Refresh">⟳</button>
       </div>
+      <div id="wx-warnings"></div>
       <div id="wx-now" class="grid3"></div>
       <div id="wx-table"></div>
       <div id="wx-obs"></div>

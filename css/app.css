@@ -645,3 +645,70 @@ body.sheet-tall:not(.sheet-collapsed) #wx-bar { display: none; }
 .obs-pin.wind { background: #264653; color: #fff; }
 .obs-pin small { font-weight: 500; opacity: 0.8; }
 :root[data-night='1'] .obs-pin { background: #000 !important; color: var(--text) !important; border-color: var(--text); }
+
+/* ---------- Weather warnings (Veðurstofa) ---------- */
+.warn-banner {
+  position: fixed;
+  top: var(--top-h, 64px);
+  left: 0;
+  right: 0;
+  z-index: 1002;
+  min-height: 34px;
+  border: none;
+  border-radius: 0;
+  padding: 6px 12px;
+  text-align: left;
+  font-size: 13px;
+  background: var(--warn, #f2c200);
+  color: #000;
+  line-height: 1.35;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.warn-banner .warn-chip { border: 1px solid rgba(0, 0, 0, 0.35); margin-left: 2px; }
+.warn-banner.dark { color: #fff; }
+.warn-banner[hidden] { display: none; }
+body.has-banner #map .leaflet-top { top: var(--banner-h, 36px); }
+body.has-banner #pick-banner { top: calc(var(--top-h, 64px) + var(--banner-h, 36px) + 8px); }
+:root[data-night='1'] .warn-banner { background: #2a0000; color: var(--text); border-bottom: 2px solid var(--text); }
+
+#tabs [data-tab='weather'].has-warning::after {
+  content: '⚠';
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--warn, #f2c200);
+}
+
+#wx-warnings:empty { display: none; }
+.warn-none {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-left: 3px solid var(--ok);
+  background: var(--panel-2);
+  border-radius: 6px;
+}
+.warn-item {
+  border-left: 5px solid var(--warn);
+  background: var(--panel-2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+.warn-item summary { cursor: pointer; list-style: none; }
+.warn-item summary::-webkit-details-marker { display: none; }
+.warn-item .sub { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.warn-item p { margin: 6px 0 0; }
+.warn-chip {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #000;
+  background: var(--warn);
+}
+.warn-chip.orange, .warn-chip.red { color: #fff; }
+.stale { color: var(--accent); font-weight: 700; }
+:root[data-night='1'] .warn-chip { background: transparent; color: var(--text); border: 1px solid var(--text); }
